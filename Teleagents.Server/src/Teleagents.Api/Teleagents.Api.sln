@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Teleagents.Api", "Teleagents.Api.csproj", "{6E3DC631-112D-6C12-2494-C8DB09287ED3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E3DC631-112D-6C12-2494-C8DB09287ED3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E3DC631-112D-6C12-2494-C8DB09287ED3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E3DC631-112D-6C12-2494-C8DB09287ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E3DC631-112D-6C12-2494-C8DB09287ED3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {57349715-07A9-4723-B2BD-CAC9F7E6AAFD}
+	EndGlobalSection
+EndGlobal
