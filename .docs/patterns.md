@@ -352,7 +352,8 @@ public class TicketModel
 
 **Conventions:**
 
-- Model class name always suffixed with `Model`: `TicketModel`, `UserModel`, `BookingModel`
+- Core EF entities (backed by tables) are suffixed with `Model`: `TicketModel`, `UserModel`, `BookingModel`
+- Value objects / owned types / nested records under a model (e.g. `Transcription`, `CallChatMessage`) **do not** use the `Model` suffix
 - `Id` is always `Guid`, never `int`
 - Timestamps: `DateTime.UtcNow` (not local time). Use `DateTime` for simpler cases, `DateTimeOffset` when timezone precision matters
 - Non-nullable string properties initialized to `string.Empty`
@@ -360,6 +361,7 @@ public class TicketModel
 - Optional navigation properties typed as nullable: `CompanyModel? Company`
 - Enums defined in the same file as their owning model (or in the contracts file if exposed via API)
 - One model per file
+- **Enum naming:** Use the entity prefix for the enum type (e.g. `CallStatus`, `CallType`); use the short name for the property (`Status`, `Type`) since the entity context makes the meaning clear. Avoid naming an enum `Type` so the property is not `public Type Type`.
 
 ### Relationship Mapping in `RepositoryContext`
 

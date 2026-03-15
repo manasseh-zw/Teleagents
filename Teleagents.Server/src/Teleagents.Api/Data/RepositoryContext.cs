@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Teleagents.Api.Helpers;
 using Teleagents.Api.Data.Models;
@@ -128,6 +129,15 @@ public class RepositoryContext : DbContext
         entity.Property(c => c.RecordingUrl).HasMaxLength(1024);
         entity.Property(c => c.ProviderCost).HasColumnType("numeric(18,4)");
         entity.Property(c => c.BilledCost).HasColumnType("numeric(18,4)");
+
+        entity
+            .Property(c => c.Transcription)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => v == null ? null : JsonSerializer.Deserialize<Transcription>(v, (JsonSerializerOptions?)null)
+            );
+        entity.Property(c => c.RawTranscriptPayload).HasColumnType("text");
         entity.HasIndex(c => c.ExternalCallId).IsUnique();
         entity.HasIndex(c => new { c.AgentId, c.StartTime });
         entity.HasIndex(c => new { c.TenantId, c.StartTime });
