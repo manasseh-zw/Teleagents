@@ -1,12 +1,12 @@
 # Development Patterns & Conventions
 
-> This document captures the architectural patterns, naming conventions, and code style  code agents must follow these patterns faithfully — they represent the developer's preferred way of crafting .NET applications.
+> This document captures the architectural patterns, naming conventions, and code style code agents must follow these patterns faithfully — they represent the developer's preferred way of crafting .NET applications.
 
 ---
 
 ## 1. Folder & Project Structure
 
-Each server project is a single ASP.NET Core Web API project. There are no separate class library projects or layered solution structures. Everything lives in one project and is organized by *concern*, not by horizontal layer.
+Each server project is a single ASP.NET Core Web API project. There are no separate class library projects or layered solution structures. Everything lives in one project and is organized by _concern_, not by horizontal layer.
 
 ```
 MyProject.Server/
@@ -31,6 +31,7 @@ MyProject.Server/
 ```
 
 **Key rules:**
+
 - All domain-related files are **co-located** in a single flat folder per domain under `Domains/`. Do not split controllers, services, and DTOs into separate top-level folders.
 - `Repository/Models/` or `Data/Models/` holds only EF Core entity class definitions.
 - `Extensions/ServiceExtensions.cs` is the single place where all DI registrations are grouped.
@@ -41,30 +42,33 @@ MyProject.Server/
 ## 2. Naming Conventions
 
 ### Files
-| Artifact | Convention | Example |
-|---|---|---|
-| Controller | `{Domain}Controller.cs` | `BookingController.cs`, `TicketsController.cs` |
-| Service (interface + impl) | `{Domain}Service.cs` | `BookingService.cs`, `TicketService.cs` |
-| DTOs / Contracts | `{Domain}Dtos.cs` or `{Domain}Contracts.cs` | `BookingDtos.cs`, `TicketContracts.cs`, `AuthContracts.cs` |
-| Validator | `{Domain}Validator.cs` | `AuthValidator.cs`, `BookingValidator.cs` |
-| EF Entity Model | `{Name}Model.cs` | `UserModel.cs`, `TicketModel.cs`, `BookingModel.cs` |
-| DbContext | `RepositoryContext.cs` | `RepositoryContext.cs` |
-| Config | `AppConfig.cs` or `AppSettings.cs` | `AppConfig.cs` |
-| Extensions | `ServiceExtensions.cs` | `ServiceExtensions.cs` |
+
+| Artifact                   | Convention                                  | Example                                                    |
+| -------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| Controller                 | `{Domain}Controller.cs`                     | `BookingController.cs`, `TicketsController.cs`             |
+| Service (interface + impl) | `{Domain}Service.cs`                        | `BookingService.cs`, `TicketService.cs`                    |
+| DTOs / Contracts           | `{Domain}Dtos.cs` or `{Domain}Contracts.cs` | `BookingDtos.cs`, `TicketContracts.cs`, `AuthContracts.cs` |
+| Validator                  | `{Domain}Validator.cs`                      | `AuthValidator.cs`, `BookingValidator.cs`                  |
+| EF Entity Model            | `{Name}Model.cs`                            | `UserModel.cs`, `TicketModel.cs`, `BookingModel.cs`        |
+| DbContext                  | `RepositoryContext.cs`                      | `RepositoryContext.cs`                                     |
+| Config                     | `AppConfig.cs` or `AppSettings.cs`          | `AppConfig.cs`                                             |
+| Extensions                 | `ServiceExtensions.cs`                      | `ServiceExtensions.cs`                                     |
 
 ### Types
-| Artifact | Convention | Example |
-|---|---|---|
-| Interface | `I{Name}` | `IBookingService`, `ITicketService` |
-| Service class | `{Name}Service` | `BookingService`, `AuthService` |
-| Controller class | `{Name}Controller` | `BookingController`, `TicketsController` |
-| Entity (EF model) | `{Name}Model` | `UserModel`, `TicketModel` |
-| Request DTO | `{Action}{Resource}Request` | `CreateTicketRequest`, `EmailSignUpRequest` |
-| Response DTO | `Get{Resource}Response` | `GetTicketResponse`, `GetTicketsResponse` |
-| Flat input DTO | `{Action}{Resource}Dto` | `AddBookingDto`, `UpdateBookingDto`, `RegisterDto` |
-| Enum inside domain | Declared in the same file as the contract or model | `TicketStatus`, `AuthProvider` |
+
+| Artifact           | Convention                                         | Example                                            |
+| ------------------ | -------------------------------------------------- | -------------------------------------------------- |
+| Interface          | `I{Name}`                                          | `IBookingService`, `ITicketService`                |
+| Service class      | `{Name}Service`                                    | `BookingService`, `AuthService`                    |
+| Controller class   | `{Name}Controller`                                 | `BookingController`, `TicketsController`           |
+| Entity (EF model)  | `{Name}Model`                                      | `UserModel`, `TicketModel`                         |
+| Request DTO        | `{Action}{Resource}Request`                        | `CreateTicketRequest`, `EmailSignUpRequest`        |
+| Response DTO       | `Get{Resource}Response`                            | `GetTicketResponse`, `GetTicketsResponse`          |
+| Flat input DTO     | `{Action}{Resource}Dto`                            | `AddBookingDto`, `UpdateBookingDto`, `RegisterDto` |
+| Enum inside domain | Declared in the same file as the contract or model | `TicketStatus`, `AuthProvider`                     |
 
 ### Members
+
 - Private fields use **underscore-prefixed camelCase**: `_repository`, `_logger`, `_authService`
 - Properties use **PascalCase**: `public string Email { get; set; }`
 - Method names use **PascalCase** (no `Async` suffix on any method — ever)
@@ -117,6 +121,7 @@ public struct Result
 ```
 
 **Usage in services:**
+
 ```csharp
 // Return success
 return Result.Ok(new GetTicketResponse(...));
@@ -136,6 +141,7 @@ catch (Exception ex)
 ```
 
 **Service interface signature:**
+
 ```csharp
 public interface ITicketService
 {
@@ -144,12 +150,12 @@ public interface ITicketService
 }
 ```
 
-
 ---
 
 ## 4. Service Architecture
 
 ### Interface + Implementation in Same File
+
 The service interface and its implementation always live together in the same `.cs` file:
 
 ```csharp
@@ -178,6 +184,7 @@ public class TicketService : ITicketService
 ```
 
 ### Method Patterns
+
 - **No `Async` suffix on method names.** `GetTickets`, not `GetTicketsAsync`. This is a firm rule.
 - Methods that perform reads: return `Result.Ok(data)` on success.
 - Methods that perform writes (create/update/delete): either return the newly created/updated entity or a success message.
@@ -186,6 +193,7 @@ public class TicketService : ITicketService
 - Internal private helper methods are used to share logic within the same service class (e.g., `AssignDriverAndVehicleInternal`).
 
 ### Exception Handling in Services
+
 In services dealing with complex operations, wrap the entire method body in a `try/catch`, log the exception, and return `Result.Fail(...)` with a user-facing generic message:
 
 ```csharp
@@ -211,6 +219,7 @@ Simpler CRUD operations (add/update/delete with known failure modes) can skip th
 ## 5. Controllers
 
 Controllers are **thin dispatchers**. No logic. No mapping. No validation. They simply:
+
 1. Extract identity/route data from the request
 2. Call the service
 3. Return `Ok(result.Data)` or `BadRequest(result.Errors)` based on the result
@@ -240,18 +249,21 @@ public class TicketsController : ControllerBase
 ```
 
 Alternative one-liner style (also acceptable):
+
 ```csharp
 var result = await _bookingService.GetBookings(Guid.Parse(companyId));
 return result.IsSuccess ? Ok(result) : BadRequest(result);
 ```
 
 ### Route Conventions
+
 - Simple domains: `[Route("api/[controller]")]` → `api/booking`
 - Resource-scoped domains: `[Route("api/organizations/{organizationId:guid}/tickets")]` — embed parent resource IDs in the route path for nested resources
 - Route parameters use `:guid` type constraints: `{ticketId:guid}`, `{organizationId:guid}`
 - Sub-actions use descriptive kebab-case suffixes: `"{bookingId}/assign"`, `"email-sign-up"`, `"google-auth"`, `"with-conversation"`
 
 ### Authorization
+
 - Apply `[Authorize]` at the **controller level** by default
 - Use `[AllowAnonymous]` on specific actions that are public (e.g., sign-in, sign-up)
 - Specific auth schemes are targeted per-endpoint when needed: `[Authorize(AuthenticationSchemes = "UserBearer")]`
@@ -262,6 +274,7 @@ return result.IsSuccess ? Ok(result) : BadRequest(result);
 ## 6. DTOs & Contracts
 
 ### Use C# Records
+
 All DTOs (requests, responses) are C# `record` types — not classes:
 
 ```csharp
@@ -289,17 +302,21 @@ public record AddBookingDto
 ```
 
 **Rule of thumb:**
+
 - Use **positional records** for responses (read-only, returned from service).
 - Use **property records** with default initializers for requests/inputs (deserialised from JSON, may have optional fields).
 
 ### Naming
+
 - Input: `{Action}{Resource}Request` → `CreateTicketRequest`, `EmailSignUpRequest`
 - Response: `Get{Resource}Response` → `GetTicketResponse`, `GetTicketsResponse`
 - Flat DTO (older style): `{Action}{Resource}Dto` → `AddBookingDto`, `RegisterDto`
 - Paginated request: `Get{Resources}Request(int Page = 1, int PageSize = 10)` with default values
 
 ### Contracts File
+
 All DTOs / contracts for a domain are co-located in one file next to the service:
+
 - `{Domain}Contracts.cs` (heydesk style, preferred) or `{Domain}Dtos.cs` (fleethq style)
 - Enums that are part of the domain's public contract live in the same contracts file: `TicketStatus`, `AssignedEntityType`
 - When contracts span multiple auth personas (e.g., user vs customer), they are organized within a wrapping static class `AuthContracts { ... }` to namespace them clearly, accessed via `using static ... AuthContracts`
@@ -309,6 +326,7 @@ All DTOs / contracts for a domain are co-located in one file next to the service
 ## 7. Entity Models (EF Core)
 
 ### Model Class Structure
+
 ```csharp
 // Data/Models/TicketModel.cs
 namespace Heydesk.Server.Data.Models;
@@ -333,6 +351,7 @@ public class TicketModel
 ```
 
 **Conventions:**
+
 - Model class name always suffixed with `Model`: `TicketModel`, `UserModel`, `BookingModel`
 - `Id` is always `Guid`, never `int`
 - Timestamps: `DateTime.UtcNow` (not local time). Use `DateTime` for simpler cases, `DateTimeOffset` when timezone precision matters
@@ -343,6 +362,7 @@ public class TicketModel
 - One model per file
 
 ### Relationship Mapping in `RepositoryContext`
+
 Relationships are configured using the **Fluent API** inside `OnModelCreating`, not data annotations on the model class
 
 ```csharp
@@ -376,6 +396,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 - Cascade deletes are explicit — never rely on EF defaults silently
 
 ### DbContext (`RepositoryContext`)
+
 - Named `RepositoryContext` (not `AppDbContext` or `DatabaseContext`)
 - Uses **primary constructor** syntax: `public class RepositoryContext(DbContextOptions<RepositoryContext> options) : DbContext(options)`
 - `DbSet<T>` properties use plural entity names (without "Model" suffix): `DbSet<UserModel> Users`, `DbSet<TicketModel> Tickets`
@@ -385,6 +406,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 ## 8. Configuration Pattern
 
 ### Preferred: Environment Variable / dotenv (`AppConfig.cs` — heydesk style)
+
 Configuration is read directly from **environment variables**. A static `AppConfig` class holds all configuration properties, grouped into typed records:
 
 ```csharp
@@ -431,6 +453,7 @@ public record Database(string LocalConnectionString, string CloudConnectionStrin
 - In production the values come from the host environment; `.env` is dev-only
 
 ### Older Variant: `appsettings.json` Bind (`Appsettings.cs` — fleethq style)
+
 ```csharp
 public class Appsettings
 {
@@ -450,6 +473,7 @@ This pattern is valid but the env-var / dotenv approach is preferred for new pro
 ## 9. Service Registration (DI)
 
 ### Extension Methods on `IServiceCollection`
+
 All service registrations are extracted into extension methods in `Extensions/ServiceExtensions.cs`. `Program.cs` just calls them:
 
 ```csharp
@@ -479,11 +503,11 @@ public static class ServiceExtensions
 ```
 
 ### Lifetimes
+
 - Services with DB access → `AddScoped`
 - Singletons (queues, publishers, caches) → `AddSingleton`
 - Transient utilities (Resend client, etc.) → `AddTransient`
 - `HttpClient` integrations registered via `AddHttpClient<TInterface, TImpl>()`
-
 
 ---
 
@@ -589,6 +613,7 @@ public class BookingValidator : AbstractValidator<BookingModel>
 ## 13. Authentication Patterns
 
 ### JWT via HttpOnly Cookies
+
 Auth tokens are stored in **HttpOnly, Secure cookies** — never returned in the response body:
 
 ```csharp
@@ -613,6 +638,7 @@ private static void SetAuthCookie(HttpContext httpContext, string token)
 - Cookie names are defined in a `Constants` class (never hardcoded inline)
 
 ### Constants
+
 Shared string constants (claim names, cookie names, etc.) are in a `Constants.cs` file:
 
 ```csharp
@@ -626,6 +652,7 @@ public static class Constants
 ```
 
 ### Claims Extraction in Controllers
+
 ```csharp
 var companyId = User.FindFirst(Constants.CompanyId)?.Value;
 if (companyId == null) return Unauthorized();
@@ -644,7 +671,16 @@ return Unauthorized("User not authenticated");
 
 - **No `Async` suffix on any method** — this is a firm preference, not negotiable
 - Prefer **early returns** (guard clauses) over deeply nested `if` blocks
-- Use **collection expressions** (`[]`) for empty/inline list initializations (C# 12+): `Errors = []`, `return Result.Fail(["message"])`
+- **C# 12 collection expressions:** Refactor all array and collection initializations to use `[]` and `[x, y]` syntax. Do not use `new T[] { }`, `Array.Empty<T>()`, or `new[] { ... }` — use collection expressions for better performance and readability.
+
+  | Avoid | Use instead |
+  |-------|-------------|
+  | `new int[] { 1, 2 }` | `[1, 2]` |
+  | `new[] { "a", "b" }` | `["a", "b"]` |
+  | `Array.Empty<string>()` | `[]` |
+  | `new List<int>()` (when a collection expression is applicable) | `[]` (if the target type accepts it) |
+
+  Examples: empty `var errors = [];`; with elements `var items = [1, 2, 3];`, `var messages = ["First error", "Second error"]`.
 - Use **`null!`** on required navigation properties to satisfy nullable reference checks
 - `string.Empty` for default string values — never `""`
 - `is null` / `is not null` over `== null` / `!= null` where idiomatic
@@ -652,7 +688,7 @@ return Unauthorized("User not authenticated");
 - Avoid verbosity: prefer `new()` over `new SomeType()` where the type is clear
 - Method bodies are not wrapped in try/catch unless genuinely needed for exception-to-Result conversion
 - Private helper methods within a service class (no separate "internal service" class) for shared logic
-- Comments should explain *why*, not *what*
+- Comments should explain _why_, not _what_
 
 ---
 
@@ -675,21 +711,21 @@ Integrations/
 
 ## Summary Cheat Sheet
 
-| Concern | Pattern |
-|---|---|
-| No. of projects | Single project per server |
-| Domain organisation | Flat folder per domain under `Domains/` |
-| Result type | `Result<T>` with `Result.Ok(...)` / `Result.Fail(...)` factory struct |
-| Method naming | PascalCase, **no Async suffix** |
-| DTOs | C# `record` types (`{Action}{Resource}Request`, `Get{Resource}Response`) |
-| Entity models | Class suffixed with `Model`, `Guid` PKs, `null!` for nav props |
-| DbContext name | `RepositoryContext` |
-| Service/Interface | Co-located in same file, `I{Name}Service` / `{Name}Service` |
-| Services in controllers | Single service injection, thin dispatch |
-| DI registration | Explicit `IServiceCollection` extension methods in `ServiceExtensions.cs` |
-| Config | Static `AppConfig` reading env vars, typed records per group |
-| Validation | FluentValidation `AbstractValidator<T>`, called from service |
-| Auth tokens | HttpOnly secure cookies, set in controller, never in body |
-| Timestamps | `DateTime.UtcNow`, `Guid.CreateVersion7()` for new IDs |
-| String defaults | `string.Empty`, not `""` |
-| Enum serialisation | Always `JsonStringEnumConverter` registered globally |
+| Concern                 | Pattern                                                                   |
+| ----------------------- | ------------------------------------------------------------------------- |
+| No. of projects         | Single project per server                                                 |
+| Domain organisation     | Flat folder per domain under `Domains/`                                   |
+| Result type             | `Result<T>` with `Result.Ok(...)` / `Result.Fail(...)` factory struct     |
+| Method naming           | PascalCase, **no Async suffix**                                           |
+| DTOs                    | C# `record` types (`{Action}{Resource}Request`, `Get{Resource}Response`)  |
+| Entity models           | Class suffixed with `Model`, `Guid` PKs, `null!` for nav props            |
+| DbContext name          | `RepositoryContext`                                                       |
+| Service/Interface       | Co-located in same file, `I{Name}Service` / `{Name}Service`               |
+| Services in controllers | Single service injection, thin dispatch                                   |
+| DI registration         | Explicit `IServiceCollection` extension methods in `ServiceExtensions.cs` |
+| Config                  | Static `AppConfig` reading env vars, typed records per group              |
+| Validation              | FluentValidation `AbstractValidator<T>`, called from service              |
+| Auth tokens             | HttpOnly secure cookies, set in controller, never in body                 |
+| Timestamps              | `DateTime.UtcNow`, `Guid.CreateVersion7()` for new IDs                    |
+| String defaults         | `string.Empty`, not `""`                                                  |
+| Enum serialisation      | Always `JsonStringEnumConverter` registered globally                      |
