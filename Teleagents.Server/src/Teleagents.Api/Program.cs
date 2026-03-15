@@ -13,7 +13,10 @@ builder
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+builder.Services.ConfigureExceptionHandler();
 builder.Services.ConfigureDatabase(Configuration.Database.ConnectionString);
 
 var app = builder.Build();
@@ -22,6 +25,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

@@ -1,10 +1,22 @@
 using Microsoft.EntityFrameworkCore;
+using Teleagents.Api.Helpers;
 using Teleagents.Api.Data.Models;
 
 namespace Teleagents.Api.Data;
 
-public class RepositoryContext(DbContextOptions<RepositoryContext> options) : DbContext(options)
+public class RepositoryContext : DbContext
 {
+    private readonly ITenantContext _tenantContext;
+
+    public RepositoryContext(
+        DbContextOptions<RepositoryContext> options,
+        ITenantContext tenantContext
+    )
+        : base(options)
+    {
+        _tenantContext = tenantContext;
+    }
+
     public DbSet<TenantModel> Tenants => Set<TenantModel>();
     public DbSet<UserModel> Users => Set<UserModel>();
     public DbSet<AgentModel> Agents => Set<AgentModel>();
@@ -16,6 +28,35 @@ public class RepositoryContext(DbContextOptions<RepositoryContext> options) : Db
         ConfigureUser(modelBuilder);
         ConfigureAgent(modelBuilder);
         ConfigureCallLog(modelBuilder);
+
+        ApplyGlobalTenantFilters(modelBuilder);
+    }
+
+    private void ApplyGlobalTenantFilters(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .Entity<UserModel>()
+            .HasQueryFilter(
+                u =>
+                    _tenantContext.TenantId == null
+                    || u.TenantId == _tenantContext.TenantId
+            );
+
+        modelBuilder
+            .Entity<AgentModel>()
+            .HasQueryFilter(
+                a =>
+                    _tenantContext.TenantId == null
+                    || a.TenantId == _tenantContext.TenantId
+            );
+
+        modelBuilder
+            .Entity<CallLogModel>()
+            .HasQueryFilter(
+                c =>
+                    _tenantContext.TenantId == null
+                    || c.TenantId == _tenantContext.TenantId
+            );
     }
 
     private static void ConfigureTenant(ModelBuilder modelBuilder)
