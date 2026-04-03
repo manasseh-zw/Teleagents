@@ -71,26 +71,28 @@ Recommended top-level structure:
 
 ```text
 Teleagents/
-  Teleagents.sln
   package.json
   .docs/
-  src/
-    server/
+  specs/
+  scripts/
+  Teleagents.Server/
+    Teleagents.Server.sln
+    src/
       Teleagents.Api/
+      Teleagents.Config/
       Teleagents.Providers.Abstractions/
       Teleagents.Providers.ElevenLabs/
   apps/
     client/
     console/
-  scripts/
 ```
 
 ### Notes on Structure
 
 - The repository root is the monorepo root.
-- `Teleagents.sln` stays at the repository root.
-- The `.sln` represents the .NET solution, not the entire monorepo management system.
-- `src/server/` contains .NET projects.
+- `Teleagents.Server/` contains the .NET solution and related projects.
+- `Teleagents.Server.sln` represents the .NET solution, not the entire monorepo management system.
+- `Teleagents.Server/src/` contains .NET projects.
 - `apps/client/` contains the tenant-facing TanStack Start frontend.
 - `apps/console/` contains the internal staff-facing TanStack Start frontend.
 - The root `package.json` is used to coordinate frontend scripts, workspace management, and local developer workflows.
@@ -183,8 +185,11 @@ That generated code should live inside the ElevenLabs provider project, not spre
 Recommended shape:
 
 ```text
-src/
-  server/
+Teleagents.Server/
+  src/
+    Teleagents.Providers.Abstractions/
+      Contracts/
+      Teleagents.Providers.Abstractions.csproj
     Teleagents.Providers.ElevenLabs/
       Generated/
       Services/
@@ -198,6 +203,7 @@ src/
 - regeneration is safer and easier
 - handwritten adapter logic is separated from generated client code
 - the rest of the application depends on our abstraction, not on provider-specific generated types
+- provider concerns stay out of the main API project
 
 The OpenAPI spec may also be stored in a tracked location in the repository so regeneration is deterministic and repeatable.
 

@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Teleagents.Api.Data;
-using Teleagents.Api.Helpers;
 using Teleagents.Api.Middleware;
 
 namespace Teleagents.Api.Extensions;
@@ -19,8 +18,6 @@ public static class ServiceExtensions
         string connectionString
     )
     {
-        services.AddScoped<ITenantContext, TenantContext>();
-
         services.AddDbContext<RepositoryContext>(options => options.UseNpgsql(connectionString));
 
         return services;

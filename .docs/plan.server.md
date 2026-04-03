@@ -2,16 +2,20 @@
 
 ## Current State
 
-The solution contains two .NET projects:
+The server solution currently contains four .NET projects:
 
-- `Teleagents.Api` — ASP.NET Core Web API (stock template, weather stub)
-- `Teleagents.Config` — Config loader using `dotenv.net` to read `DATABASE_URL` from `.env`
+- `Teleagents.Api` — ASP.NET Core Web API
+- `Teleagents.Config` — config loader using `dotenv.net`
+- `Teleagents.Providers.Abstractions` — Teleagents-owned provider contracts
+- `Teleagents.Providers.ElevenLabs` — ElevenLabs integration project for generated and handwritten provider code
 
-Domain models are already drafted in `Teleagents.Api/Data/Models/`:
+The data layer already exists in `Teleagents.Api/Data/`:
 
 - `TenantModel`, `UserModel`, `AgentModel`, `CallLogModel`
+- `RepositoryContext`
+- initial EF migration files
 
-No packages beyond the bare template are installed. No database, auth, or real endpoints yet.
+Entity Framework Core and PostgreSQL packages are already installed. Tenant ownership is explicit through `TenantId` fields, but tenant scoping is not currently enforced by auth or by global EF query filters.
 
 ---
 
@@ -19,56 +23,59 @@ No packages beyond the bare template are installed. No database, auth, or real e
 
 ### Project Structure
 
-We are **not** creating `Teleagents.Providers.Abstractions` for V0. There is one provider (ElevenLabs). Abstracting over one concrete thing is premature at this stage.
+We are keeping both `Teleagents.Providers.Abstractions` and `Teleagents.Providers.ElevenLabs` as separate class libraries.
 
-We **are** keeping `Teleagents.Providers.ElevenLabs` as a separate `.csproj`. This is justified purely by the Kiota-generated code — the generation produces many files with its own `Microsoft.Kiota.*` dependency tree. Containing it in its own project keeps regeneration clean and prevents generated files from polluting `Teleagents.Api`.
+`Teleagents.Providers.ElevenLabs` exists to contain the generated Kiota client and the provider-specific dependency graph away from the API project.
 
-Handwritten integration logic sits inside `Teleagents.Api` under `Integrations/ElevenLabs/`, not inside the generated project.
+`Teleagents.Providers.Abstractions` exists so the API can depend on Teleagents-owned contracts instead of depending directly on ElevenLabs-specific generated types or concrete provider classes.
+
+Handwritten ElevenLabs adapter logic belongs in `Teleagents.Providers.ElevenLabs`, alongside the generated client, not under `Teleagents.Api`.
 
 ### Layering Rule
 
 | Layer | Location | Rule |
 |---|---|---|
+| Teleagents-owned provider contracts | `Teleagents.Providers.Abstractions/Contracts/` | Stable boundary the API depends on |
 | Kiota-generated client | `Teleagents.Providers.ElevenLabs/Generated/` | Never edit manually |
-| Handwritten adapter / mapping | `Teleagents.Api/Integrations/ElevenLabs/` | All business logic, mapping, config here |
-| Provider abstraction interface | ❌ — skip for V0 | Introduce when a second provider exists |
+| Handwritten adapter / mapping | `Teleagents.Providers.ElevenLabs/Services/`, `Mapping/` | Wrap generated code and translate provider types |
+| Application and domain logic | `Teleagents.Api/` | Must not depend on generated ElevenLabs types directly |
 
 ---
 
 ## Target Solution Structure
 
-```
+```text
 Teleagents/
-  Teleagents.sln
   .docs/
   specs/
-    elevenlabs.openapi.json          ← tracked, used for regeneration
+    elevenlabs.openapi.json            ← tracked, used for regeneration
   scripts/
-    generate-elevenlabs.sh           ← one-command regeneration
-  src/
-    server/
+    generate-elevenlabs.sh             ← one-command regeneration
+  Teleagents.Server/
+    Teleagents.Server.sln
+    src/
       Teleagents.Api/
         Data/
           Models/
-          AppDbContext.cs
+          RepositoryContext.cs
           Migrations/
-        Integrations/
-          ElevenLabs/
-            ElevenLabsClient.cs      ← your handwritten wrapper
-            ElevenLabsMapping.cs     ← type transformation
-            ElevenLabsOptions.cs     ← config binding
         Features/
-          Platform/                  ← /api/platform/* endpoints
-          Internal/                  ← /api/internal/* endpoints
-          Webhooks/                  ← /api/webhooks/elevenlabs
+          Platform/                    ← /api/platform/* endpoints
+          Internal/                    ← /api/internal/* endpoints
+          Webhooks/                    ← /api/webhooks/elevenlabs
         Program.cs
       Teleagents.Config/
+      Teleagents.Providers.Abstractions/
+        Contracts/
+        Teleagents.Providers.Abstractions.csproj
       Teleagents.Providers.ElevenLabs/
-        Generated/                   ← Kiota output, do not touch
+        Generated/                     ← Kiota output, do not touch
+        Services/                      ← handwritten wrapper / DI
+        Mapping/                       ← type transformation
         Teleagents.Providers.ElevenLabs.csproj
   apps/
-    client/                          ← tenant-facing frontend (later)
-    console/                         ← staff-facing frontend (later)
+    client/                            ← tenant-facing frontend (later)
+    console/                           ← staff-facing frontend (later)
 ```
 
 ---
@@ -79,36 +86,34 @@ Teleagents/
 
 **Goal:** Wire the existing domain models into EF Core and apply the schema to PostgreSQL.
 
-Nothing else proceeds meaningfully without a real database. Auth needs `User`/`Tenant`. The ElevenLabs integration needs `Agent` records to map against. All endpoints need the DB.
+**Status:** Mostly complete. Models, `RepositoryContext`, and the initial migration exist already.
 
-**Steps:**
+**Remaining follow-up:**
 
-1. Add EF Core + Npgsql NuGet packages to `Teleagents.Api`
-2. Create `AppDbContext` — register all four models
-3. Apply `CallLog → Tenant` relationship with `DeleteBehavior.NoAction` (avoids multiple cascade path error)
-4. Add global query filters for multi-tenant isolation on `Agent`, `User`, and `CallLog` by `TenantId`
-5. Wire `AppDbContext` into `Program.cs` using the `DATABASE_URL` from `Teleagents.Config`
-6. Run initial migration and apply to the database
-7. Add a local dev seeder — one test tenant, one test agent
+1. Keep tenant ownership explicit through `TenantId`
+2. Enforce tenant scoping later through auth and service-layer query composition instead of global query filters
+3. Add a local dev seed workflow once the API surface is a little more stable
 
-**Deliverable:** PostgreSQL schema applied, `AppDbContext` live, EF migrations tracked in source control.
+**Deliverable:** PostgreSQL schema applied, `RepositoryContext` live, EF migrations tracked in source control.
 
 ---
 
 ### Phase 2 — Solution Restructure
 
-**Goal:** Get the project layout matching the target structure before adding more code.
+**Goal:** Get the provider boundary and repo layout ready before adding the ElevenLabs client.
 
-**Steps:**
+**Status:** Complete enough to proceed.
 
-1. Create `Teleagents.Providers.ElevenLabs` project (empty for now — just the `.csproj` and `Generated/` placeholder)
-2. Reference it from `Teleagents.Api`
-3. Create the `Integrations/ElevenLabs/` folder structure in `Teleagents.Api`
-4. Rename / reorganise the solution file to match the target layout if needed
-5. Create the `specs/` folder for the ElevenLabs OpenAPI spec (committed to source control)
-6. Create `scripts/generate-elevenlabs.sh` placeholder
+**Completed steps:**
 
-**Deliverable:** Solution structure matches the target layout. Ready for SDK generation in the next phase.
+1. Scaffold `Teleagents.Providers.Abstractions` and `Teleagents.Providers.ElevenLabs`
+2. Add project references so the API depends on abstractions and provider projects explicitly
+3. Create `Generated/`, `Services/`, and `Mapping/` in the ElevenLabs provider project
+4. Create the tracked `specs/` folder for the ElevenLabs OpenAPI document
+5. Create `scripts/generate-elevenlabs.sh` placeholder
+6. Keep `Teleagents.Server/Teleagents.Server.sln` as the primary server solution
+
+**Deliverable:** Provider boundaries are scaffolded and the repo is ready for SDK generation in the next phase.
 
 ---
 
@@ -116,19 +121,17 @@ Nothing else proceeds meaningfully without a real database. Auth needs `User`/`T
 
 **Goal:** Generate a typed .NET client from the ElevenLabs OpenAPI spec and wire a handwritten adapter around it.
 
-Do this after the DB is real so you have concrete types to map against when writing the adapter.
-
 **Steps:**
 
 1. Download and store the ElevenLabs OpenAPI spec in `specs/elevenlabs.openapi.json`
 2. Install `Microsoft.Kiota` CLI tool
-3. Generate the client into `Teleagents.Providers.ElevenLabs/Generated/` — commit the generated output
+3. Generate the full client into `Teleagents.Providers.ElevenLabs/Generated/` and commit the generated output
 4. Flesh out `scripts/generate-elevenlabs.sh` so regeneration is a single command
-5. Write `ElevenLabsClient.cs` in `Integrations/ElevenLabs/` — wraps the generated client, handles auth headers, exposes only what the application needs
-6. Write `ElevenLabsMapping.cs` — transforms generated types into internal DTOs
-7. Register in DI, bind the API key from config
+5. Add handwritten wrapper services in `Teleagents.Providers.ElevenLabs/Services/`
+6. Add mapping code in `Teleagents.Providers.ElevenLabs/Mapping/`
+7. Register the provider in DI and bind the API key from config
 
-**Deliverable:** Working generated client, handwritten wrapper, repeatable regeneration script. The rest of the app never imports from `Generated/` directly.
+**Deliverable:** Working generated client, handwritten wrapper, repeatable regeneration script. The rest of the app depends only on Teleagents-owned contracts.
 
 ---
 
@@ -136,7 +139,7 @@ Do this after the DB is real so you have concrete types to map against when writ
 
 **Goal:** Enforce auth before any real data endpoints are exposed.
 
-Wire WorkOS JWT auth, define tenant vs staff policies, and extract the `TenantId` claim into a scoped service so all downstream queries are automatically tenant-scoped.
+Wire WorkOS JWT auth, define tenant vs staff policies, and resolve tenant membership from claims so service-layer queries can be scoped explicitly.
 
 **Steps:**
 
@@ -145,19 +148,17 @@ Wire WorkOS JWT auth, define tenant vs staff policies, and extract the `TenantId
 3. Define policies:
    - `TenantUser` — protects `/api/platform/*`
    - `PlatformStaff` — protects `/api/internal/*`
-4. Create a `TenantContext` service — extracts `TenantId` from the JWT claim, used by all read queries
+4. Add a small current-user/current-organization abstraction for auth context if needed
 5. Apply policies globally per route group
 6. Test with a real WorkOS dev org and a test token
 
-**Deliverable:** JWT auth live, tenant isolation enforced at the auth layer, route policies in place.
+**Deliverable:** JWT auth live, route policies in place, and tenant scoping performed explicitly in application code.
 
 ---
 
 ### Phase 5 — Platform API Endpoints
 
 **Goal:** Build the actual endpoints the client portal and internal console will consume.
-
-Auth is enforced, the DB is real, the ElevenLabs adapter exists. This phase makes the backend a callable product.
 
 **Steps:**
 
@@ -180,12 +181,12 @@ Auth is enforced, the DB is real, the ElevenLabs adapter exists. This phase make
 
 ## Sequencing Summary
 
-```
-Phase 1: DB            ← start here
-Phase 2: Restructure   ← can run alongside Phase 1
-Phase 3: ElevenLabs    ← after Phase 1 (needs real model types)
-Phase 4: Auth          ← after Phase 1 (needs User/Tenant in DB)
-Phase 5: Endpoints     ← after Phases 3 + 4
+```text
+Phase 1: DB foundation   ← already largely in place
+Phase 2: Restructure     ← scaffolded
+Phase 3: ElevenLabs      ← next
+Phase 4: Auth            ← after Phase 3 or in parallel once claims model is clear
+Phase 5: Endpoints       ← after Phases 3 + 4
 ```
 
-Frontend apps (`client`, `console`) are not started until Phase 5 is complete and the API is stable.
+Frontend apps (`client`, `console`) start after the API and auth shape are stable enough to consume confidently.

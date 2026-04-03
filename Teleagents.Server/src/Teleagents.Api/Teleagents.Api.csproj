@@ -14,5 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Teleagents.Config\Teleagents.Config.csproj" />
+    <ProjectReference Include="..\Teleagents.Providers.Abstractions\Teleagents.Providers.Abstractions.csproj" />
+    <ProjectReference Include="..\Teleagents.Providers.ElevenLabs\Teleagents.Providers.ElevenLabs.csproj" />
   </ItemGroup>
 </Project>

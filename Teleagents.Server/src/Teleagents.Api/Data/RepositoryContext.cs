@@ -1,22 +1,13 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Teleagents.Api.Helpers;
 using Teleagents.Api.Data.Models;
 
 namespace Teleagents.Api.Data;
 
 public class RepositoryContext : DbContext
 {
-    private readonly ITenantContext _tenantContext;
-
-    public RepositoryContext(
-        DbContextOptions<RepositoryContext> options,
-        ITenantContext tenantContext
-    )
-        : base(options)
-    {
-        _tenantContext = tenantContext;
-    }
+    public RepositoryContext(DbContextOptions<RepositoryContext> options)
+        : base(options) { }
 
     public DbSet<TenantModel> Tenants => Set<TenantModel>();
     public DbSet<UserModel> Users => Set<UserModel>();
@@ -29,35 +20,6 @@ public class RepositoryContext : DbContext
         ConfigureUser(modelBuilder);
         ConfigureAgent(modelBuilder);
         ConfigureCallLog(modelBuilder);
-
-        ApplyGlobalTenantFilters(modelBuilder);
-    }
-
-    private void ApplyGlobalTenantFilters(ModelBuilder modelBuilder)
-    {
-        modelBuilder
-            .Entity<UserModel>()
-            .HasQueryFilter(
-                u =>
-                    _tenantContext.TenantId == null
-                    || u.TenantId == _tenantContext.TenantId
-            );
-
-        modelBuilder
-            .Entity<AgentModel>()
-            .HasQueryFilter(
-                a =>
-                    _tenantContext.TenantId == null
-                    || a.TenantId == _tenantContext.TenantId
-            );
-
-        modelBuilder
-            .Entity<CallLogModel>()
-            .HasQueryFilter(
-                c =>
-                    _tenantContext.TenantId == null
-                    || c.TenantId == _tenantContext.TenantId
-            );
     }
 
     private static void ConfigureTenant(ModelBuilder modelBuilder)
@@ -135,7 +97,10 @@ public class RepositoryContext : DbContext
             .HasColumnType("jsonb")
             .HasConversion(
                 v => v == null ? null : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-                v => v == null ? null : JsonSerializer.Deserialize<Transcription>(v, (JsonSerializerOptions?)null)
+                v =>
+                    v == null
+                        ? null
+                        : JsonSerializer.Deserialize<Transcription>(v, (JsonSerializerOptions?)null)
             );
         entity.Property(c => c.RawTranscriptPayload).HasColumnType("text");
         entity.HasIndex(c => c.ExternalCallId).IsUnique();
