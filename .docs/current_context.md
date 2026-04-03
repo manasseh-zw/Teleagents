@@ -1,42 +1,47 @@
 # Current Context
 
-Minimal snapshot of what’s done, patterns in use, and what’s next. Full conventions live in **patterns.md**; the phased plan is in **plan.server.md**.
+Short handoff for the next session.
 
----
+## Current State
 
-## Done So Far
+- The main server solution is [Teleagents.Server.sln](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/Teleagents.Server.sln).
+- The solution now includes:
+  - `Teleagents.Api`
+  - `Teleagents.Config`
+  - `Teleagents.Providers.Abstractions`
+  - `Teleagents.Providers.ElevenLabs`
+- `Teleagents.Api` references both provider projects.
+- Tenant ownership stays explicit through `TenantId` fields on tenant-owned entities.
+- The old ambient tenant-context/global query-filter pattern has been removed.
 
-### Data & API
+## What Was Done
 
-- **Solution layout**: `Teleagents.Server/Teleagents.Server.sln` now includes `Teleagents.Api`, `Teleagents.Config`, `Teleagents.Providers.Abstractions`, and `Teleagents.Providers.ElevenLabs`.
-- **Data layer**: `Data/RepositoryContext.cs` with `TenantModel`, `UserModel`, `AgentModel`, `CallLogModel`. Fluent config: tables, relationships, indexes. `CallLogModel` has `Transcription` (jsonb, `Transcription` / `CallChatMessage` records), `RawTranscriptPayload` (text), and `CallType` (Inbound/Outbound). Value types like `Transcription` and `CallChatMessage` do **not** use the `Model` suffix.
-- **Tenant modeling**: `TenantModel` represents the customer organization. Tenant-owned entities (`User`, `Agent`, `CallLog`) keep explicit `TenantId` foreign keys, but tenant scoping is not enforced through global EF query filters.
-- **DI**: `Extensions/ServiceExtensions.cs` — `ConfigureDatabase(connectionString)` and `ConfigureExceptionHandler()`. `Program.cs` only calls these; no inline service registration.
-- **Provider scaffolding**: `Teleagents.Providers.Abstractions` and `Teleagents.Providers.ElevenLabs` are scaffolded as class libraries. The ElevenLabs project now has placeholder `Generated/`, `Services/`, and `Mapping/` folders, plus a root `scripts/generate-elevenlabs.sh` stub and `specs/` folder for the tracked OpenAPI document.
-- **Result**: `Helpers/Result.cs` — `Result`, `Result<T>`, `IReadOnlyList<string> Errors`, `Bind`; implicit conversions from `T` and `string`; no external libs.
-- **API**: Controllers + JSON options: `ReferenceHandler.IgnoreCycles`, `JsonStringEnumConverter`. Global exception handler: `Middleware/GlobalExceptionHandler.cs` implementing `IExceptionHandler`; registered via `AddExceptionHandler<GlobalExceptionHandler>()`; returns ProblemDetails with traceId and logs.
-- **Migrations**: The initial EF migration is present and tracked in source control. A local seed script is not scaffolded yet.
+- Scaffolded `Teleagents.Providers.Abstractions` with [IVoiceProviderService.cs](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.Abstractions/Contracts/IVoiceProviderService.cs).
+- Scaffolded `Teleagents.Providers.ElevenLabs` with provider folders:
+  - [Generated](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Generated)
+  - [Services]( /Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Services/README.md)
+  - [Mapping]( /Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Mapping/README.md)
+- Added the spec location [specs/elevenlabs.openapi.json](/Users/manasseh/Projects/next/teleagents/main/Teleagents/specs/elevenlabs.openapi.json) using the official `https://api.elevenlabs.io/openapi.json` source.
+- Replaced the generation stub with a working [scripts/generate-elevenlabs.sh](/Users/manasseh/Projects/next/teleagents/main/Teleagents/scripts/generate-elevenlabs.sh) workflow that:
+  - normalizes the upstream spec into a temporary Kiota-friendly copy
+  - defaults to a narrow ConvAI conversation scope
+  - allows extra include paths to be passed explicitly when expanding scope later
+- Generated the first working Kiota client slice into [Generated](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Generated) for:
+  - `/v1/convai/conversations`
+  - `/v1/convai/conversations/{conversation_id}`
+  - `/v1/convai/conversations/{conversation_id}/audio`
+- Added the Kiota runtime bundle dependency to [Teleagents.Providers.ElevenLabs.csproj](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Teleagents.Providers.ElevenLabs.csproj).
 
----
+## Active Direction
 
-## Patterns Established
+- Keep the ElevenLabs generated client inside `Teleagents.Providers.ElevenLabs`.
+- Keep the generated surface intentionally narrow and add more `--include-path` entries only as provider features require them.
+- Keep handwritten wrapper and mapping code in that same provider project.
+- Keep `Teleagents.Api` depending on Teleagents-owned abstractions, not generated ElevenLabs types directly.
 
-- **One server executable plus support libraries**: `Teleagents.Api` remains the only executable project. Provider abstractions and generated/provider-specific code live in separate class libraries.
-- **EF**: Only table-backed entities use the `Model` suffix; value/owned types (e.g. `Transcription`, `CallChatMessage`) do not. DbContext name: `RepositoryContext`. Enums on entities: type name with prefix (e.g. `CallType`, `CallStatus`), property short (e.g. `Type`, `Status`).
-- **Services**: Return `Result`/`Result<T>`; no `Async` suffix on method names; interface + impl in same file.
-- **Controllers**: Thin; call service, map result to Ok/BadRequest.
-- **C# 12**: Collection expressions (`[]`, `[a,b]`) for arrays/lists; no `Array.Empty<T>()` / `new[] { }` where a collection expression fits.
-- **Providers**: Generated provider code stays in `Teleagents.Providers.ElevenLabs/Generated/`; handwritten wrapper and mapping code for ElevenLabs live alongside it in that same provider project, not in `Teleagents.Api`.
+## Next Session
 
-Details and examples are in **.docs/patterns.md**.
-
----
-
-## Next Steps (from plan.server.md)
-
-1. **Phase 2 — Solution restructure**: complete enough to proceed. The provider projects, tracked `specs/` folder, and generation script stub are now in place.
-2. **Phase 3 — ElevenLabs**: add the ElevenLabs OpenAPI spec, generate the full Kiota client into `Teleagents.Providers.ElevenLabs/Generated/`, then add the handwritten wrapper, mapping, and DI wiring in the same provider project.
-3. **Phase 4 — Auth (WorkOS)**: JWT, policies (TenantUser, PlatformStaff), tenant resolution from claims, route policies, and explicit tenant scoping in services/endpoints.
-4. **Phase 5 — Endpoints**: Platform read APIs, internal management APIs, and the ElevenLabs webhook receiver.
-
-Frontend (client/console) starts after Phase 5.
+- Restore/build the provider project after the new Kiota bundle package is available locally.
+- Add the first handwritten wrapper around the generated conversation endpoints.
+- Decide whether V0 also needs agent listing/details and outbound calling include paths before expanding generation scope.
+- Then wire provider registration into API DI.

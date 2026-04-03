@@ -1,0 +1,38 @@
+{
+  "descriptionHash": "4FC757EB94D28C5D6DBDC867E004AF13554C2C74AE68C6AF78D8D71B924C04C6B37732F590F33F3BB9B40AC4870F61C8FB8AFEFAE9ED0E62DDF90BA23C06B8E8",
+  "descriptionLocation": "../../../../../../../../../../../tmp/elevenlabs.kiota.conversations.json",
+  "lockFileVersion": "1.0.0",
+  "kiotaVersion": "1.30.0",
+  "clientClassName": "ElevenLabsApiClient",
+  "typeAccessModifier": "Public",
+  "clientNamespaceName": "Teleagents.Providers.ElevenLabs.Generated",
+  "language": "CSharp",
+  "usesBackingStore": false,
+  "excludeBackwardCompatible": true,
+  "includeAdditionalData": true,
+  "disableSSLValidation": false,
+  "serializers": [
+    "Microsoft.Kiota.Serialization.Json.JsonSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Text.TextSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Form.FormSerializationWriterFactory",
+    "Microsoft.Kiota.Serialization.Multipart.MultipartSerializationWriterFactory"
+  ],
+  "deserializers": [
+    "Microsoft.Kiota.Serialization.Json.JsonParseNodeFactory",
+    "Microsoft.Kiota.Serialization.Text.TextParseNodeFactory",
+    "Microsoft.Kiota.Serialization.Form.FormParseNodeFactory"
+  ],
+  "structuredMimeTypes": [
+    "application/json",
+    "text/plain;q=0.9",
+    "application/x-www-form-urlencoded;q=0.2",
+    "multipart/form-data;q=0.1"
+  ],
+  "includePatterns": [
+    "/v1/convai/conversations",
+    "/v1/convai/conversations/{conversation_id}",
+    "/v1/convai/conversations/{conversation_id}/audio"
+  ],
+  "excludePatterns": [],
+  "disabledValidationRules": []
+}
