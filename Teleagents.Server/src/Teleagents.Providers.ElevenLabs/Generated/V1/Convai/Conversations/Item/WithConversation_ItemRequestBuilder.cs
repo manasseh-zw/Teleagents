@@ -9,7 +9,10 @@ using System.Threading.Tasks;
 using System.Threading;
 using System;
 using Teleagents.Providers.ElevenLabs.Generated.Models;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Analysis;
 using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Audio;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Feedback;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Files;
 namespace Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item
 {
     /// <summary>
@@ -18,10 +21,25 @@ namespace Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class WithConversation_ItemRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The analysis property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Analysis.AnalysisRequestBuilder Analysis
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Analysis.AnalysisRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>The audio property</summary>
         public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Audio.AudioRequestBuilder Audio
         {
             get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Audio.AudioRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The feedback property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Feedback.FeedbackRequestBuilder Feedback
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Feedback.FeedbackRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The files property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Files.FilesRequestBuilder Files
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.Files.FilesRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.WithConversation_ItemRequestBuilder"/> and sets the default values.

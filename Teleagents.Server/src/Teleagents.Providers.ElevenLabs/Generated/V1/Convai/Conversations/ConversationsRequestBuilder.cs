@@ -10,6 +10,7 @@ using System.Threading;
 using System;
 using Teleagents.Providers.ElevenLabs.Generated.Models;
 using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Messages;
 namespace Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations
 {
     /// <summary>
@@ -18,6 +19,11 @@ namespace Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class ConversationsRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The messages property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Messages.MessagesRequestBuilder Messages
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Messages.MessagesRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>Gets an item from the Teleagents.Providers.ElevenLabs.Generated.v1.convai.conversations.item collection</summary>
         /// <param name="position">The id of the conversation you&apos;re taking the action on.</param>
         /// <returns>A <see cref="global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.Item.WithConversation_ItemRequestBuilder"/></returns>

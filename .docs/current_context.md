@@ -24,24 +24,23 @@ Short handoff for the next session.
 - Added the spec location [specs/elevenlabs.openapi.json](/Users/manasseh/Projects/next/teleagents/main/Teleagents/specs/elevenlabs.openapi.json) using the official `https://api.elevenlabs.io/openapi.json` source.
 - Replaced the generation stub with a working [scripts/generate-elevenlabs.sh](/Users/manasseh/Projects/next/teleagents/main/Teleagents/scripts/generate-elevenlabs.sh) workflow that:
   - normalizes the upstream spec into a temporary Kiota-friendly copy
-  - defaults to a narrow ConvAI conversation scope
-  - allows extra include paths to be passed explicitly when expanding scope later
-- Generated the first working Kiota client slice into [Generated](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Generated) for:
-  - `/v1/convai/conversations`
-  - `/v1/convai/conversations/{conversation_id}`
-  - `/v1/convai/conversations/{conversation_id}/audio`
+  - generates the full `/v1/convai/**` surface instead of a narrow conversation-only slice
+- Generated the Kiota ConvAI client into [Generated](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Generated), including:
+  - agents and branches/deployments/drafts operations
+  - conversations, files, feedback, search, analysis, and audio
+  - knowledge base operations
+  - tools, secrets, settings, phone numbers, batch calling, MCP servers, and related ConvAI endpoints
 - Added the Kiota runtime bundle dependency to [Teleagents.Providers.ElevenLabs.csproj](/Users/manasseh/Projects/next/teleagents/main/Teleagents/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Teleagents.Providers.ElevenLabs.csproj).
 
 ## Active Direction
 
 - Keep the ElevenLabs generated client inside `Teleagents.Providers.ElevenLabs`.
-- Keep the generated surface intentionally narrow and add more `--include-path` entries only as provider features require them.
+- Keep generation scoped to the ElevenLabs ConvAI domain via `/v1/convai/**`.
 - Keep handwritten wrapper and mapping code in that same provider project.
 - Keep `Teleagents.Api` depending on Teleagents-owned abstractions, not generated ElevenLabs types directly.
 
 ## Next Session
 
 - Restore/build the provider project after the new Kiota bundle package is available locally.
-- Add the first handwritten wrapper around the generated conversation endpoints.
-- Decide whether V0 also needs agent listing/details and outbound calling include paths before expanding generation scope.
+- Add the first handwritten wrapper around the generated ConvAI endpoints, starting with the conversation and agent operations V0 needs first.
 - Then wire provider registration into API DI.

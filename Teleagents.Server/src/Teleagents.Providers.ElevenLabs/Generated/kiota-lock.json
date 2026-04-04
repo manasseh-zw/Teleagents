@@ -1,6 +1,6 @@
 {
-  "descriptionHash": "4FC757EB94D28C5D6DBDC867E004AF13554C2C74AE68C6AF78D8D71B924C04C6B37732F590F33F3BB9B40AC4870F61C8FB8AFEFAE9ED0E62DDF90BA23C06B8E8",
-  "descriptionLocation": "../../../../../../../../../../../tmp/elevenlabs.kiota.conversations.json",
+  "descriptionHash": "C75E2ED555ECFB76D04EE09235290F12EDDEA942757EFBA31DC2458240D93A444AB7A6C669699080D0B6085F1EE4FA111AE4020627FBE00DFCDCB8393268F7FB",
+  "descriptionLocation": "../../../../../../../../../../../tmp/elevenlabs.kiota.convai.json",
   "lockFileVersion": "1.0.0",
   "kiotaVersion": "1.30.0",
   "clientClassName": "ElevenLabsApiClient",
@@ -29,9 +29,7 @@
     "multipart/form-data;q=0.1"
   ],
   "includePatterns": [
-    "/v1/convai/conversations",
-    "/v1/convai/conversations/{conversation_id}",
-    "/v1/convai/conversations/{conversation_id}/audio"
+    "/v1/convai/**"
   ],
   "excludePatterns": [],
   "disabledValidationRules": []

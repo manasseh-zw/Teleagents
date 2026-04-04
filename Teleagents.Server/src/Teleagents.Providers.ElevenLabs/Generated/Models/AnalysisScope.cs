@@ -3,7 +3,7 @@ using System.Runtime.Serialization;
 using System;
 namespace Teleagents.Providers.ElevenLabs.Generated.Models
 {
-    /// <summary>The scope of the analysis. &apos;conversation&apos; uses the full transcript; &apos;agent&apos; uses only the portion where the defining agent was active.</summary>
+    /// <summary>The scope of transcript context used when evaluating this criterion. &apos;conversation&apos; uses the full transcript; &apos;agent&apos; uses only the portion where the defining agent was active.</summary>
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public enum AnalysisScope
     {

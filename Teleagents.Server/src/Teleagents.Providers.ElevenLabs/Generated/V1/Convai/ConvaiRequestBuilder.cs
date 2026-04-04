@@ -6,7 +6,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Agent;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.AgentTesting;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Agents;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Analytics;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.BatchCalling;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversation;
 using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.EnvironmentVariables;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.KnowledgeBase;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Llm;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.LlmUsage;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.McpServers;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.PhoneNumbers;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Secrets;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Settings;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.SipTrunk;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.TestInvocations;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Tools;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Twilio;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Users;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Whatsapp;
+using Teleagents.Providers.ElevenLabs.Generated.V1.Convai.WhatsappAccounts;
 namespace Teleagents.Providers.ElevenLabs.Generated.V1.Convai
 {
     /// <summary>
@@ -15,10 +36,115 @@ namespace Teleagents.Providers.ElevenLabs.Generated.V1.Convai
     [global::System.CodeDom.Compiler.GeneratedCode("Kiota", "1.0.0")]
     public partial class ConvaiRequestBuilder : BaseRequestBuilder
     {
+        /// <summary>The agent property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Agent.AgentRequestBuilder Agent
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Agent.AgentRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The agents property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Agents.AgentsRequestBuilder Agents
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Agents.AgentsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The agentTesting property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.AgentTesting.AgentTestingRequestBuilder AgentTesting
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.AgentTesting.AgentTestingRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The analytics property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Analytics.AnalyticsRequestBuilder Analytics
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Analytics.AnalyticsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The batchCalling property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.BatchCalling.BatchCallingRequestBuilder BatchCalling
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.BatchCalling.BatchCallingRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The conversation property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversation.ConversationRequestBuilder Conversation
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversation.ConversationRequestBuilder(PathParameters, RequestAdapter);
+        }
         /// <summary>The conversations property</summary>
         public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.ConversationsRequestBuilder Conversations
         {
             get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Conversations.ConversationsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The environmentVariables property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.EnvironmentVariables.EnvironmentVariablesRequestBuilder EnvironmentVariables
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.EnvironmentVariables.EnvironmentVariablesRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The knowledgeBase property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.KnowledgeBase.KnowledgeBaseRequestBuilder KnowledgeBase
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.KnowledgeBase.KnowledgeBaseRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The llm property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Llm.LlmRequestBuilder Llm
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Llm.LlmRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The llmUsage property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.LlmUsage.LlmUsageRequestBuilder LlmUsage
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.LlmUsage.LlmUsageRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The mcpServers property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.McpServers.McpServersRequestBuilder McpServers
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.McpServers.McpServersRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The phoneNumbers property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.PhoneNumbers.PhoneNumbersRequestBuilder PhoneNumbers
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.PhoneNumbers.PhoneNumbersRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The secrets property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Secrets.SecretsRequestBuilder Secrets
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Secrets.SecretsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The settings property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Settings.SettingsRequestBuilder Settings
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Settings.SettingsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The sipTrunk property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.SipTrunk.SipTrunkRequestBuilder SipTrunk
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.SipTrunk.SipTrunkRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The testInvocations property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.TestInvocations.TestInvocationsRequestBuilder TestInvocations
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.TestInvocations.TestInvocationsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The tools property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Tools.ToolsRequestBuilder Tools
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Tools.ToolsRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The twilio property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Twilio.TwilioRequestBuilder Twilio
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Twilio.TwilioRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The users property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Users.UsersRequestBuilder Users
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Users.UsersRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The whatsapp property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Whatsapp.WhatsappRequestBuilder Whatsapp
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.Whatsapp.WhatsappRequestBuilder(PathParameters, RequestAdapter);
+        }
+        /// <summary>The whatsappAccounts property</summary>
+        public global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.WhatsappAccounts.WhatsappAccountsRequestBuilder WhatsappAccounts
+        {
+            get => new global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.WhatsappAccounts.WhatsappAccountsRequestBuilder(PathParameters, RequestAdapter);
         }
         /// <summary>
         /// Instantiates a new <see cref="global::Teleagents.Providers.ElevenLabs.Generated.V1.Convai.ConvaiRequestBuilder"/> and sets the default values.

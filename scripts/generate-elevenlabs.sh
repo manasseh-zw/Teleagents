@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC_PATH="$ROOT_DIR/specs/elevenlabs.openapi.json"
 OUTPUT_DIR="$ROOT_DIR/Teleagents.Server/src/Teleagents.Providers.ElevenLabs/Generated"
-TMP_SPEC="/tmp/elevenlabs.kiota.conversations.json"
+TMP_SPEC="/tmp/elevenlabs.kiota.convai.json"
 KIOTA_BIN="${KIOTA_BIN:-}"
 
 if [[ ! -f "$SPEC_PATH" ]]; then
@@ -59,9 +59,7 @@ echo "Source spec: $SPEC_PATH"
 echo "Temp spec:   $TMP_SPEC"
 echo "Output:      $OUTPUT_DIR"
 echo "Paths:"
-echo "  - /v1/convai/conversations"
-echo "  - /v1/convai/conversations/{conversation_id}"
-echo "  - /v1/convai/conversations/{conversation_id}/audio"
+echo "  - /v1/convai/**"
 
 "$KIOTA_BIN" generate \
   -l CSharp \
@@ -71,6 +69,4 @@ echo "  - /v1/convai/conversations/{conversation_id}/audio"
   -n Teleagents.Providers.ElevenLabs.Generated \
   --clean-output \
   --exclude-backward-compatible \
-  --include-path "/v1/convai/conversations" \
-  --include-path "/v1/convai/conversations/{conversation_id}" \
-  --include-path "/v1/convai/conversations/{conversation_id}/audio"
+  --include-path "/v1/convai/**"
