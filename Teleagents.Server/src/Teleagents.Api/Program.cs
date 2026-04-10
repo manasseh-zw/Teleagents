@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Teleagents.Api.Extensions;
 using Teleagents.Config;
+using Teleagents.Providers.ElevenLabs.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder
 
 builder.Services.ConfigureExceptionHandler();
 builder.Services.ConfigureDatabase(Configuration.Database.ConnectionString);
+builder.Services.AddElevenLabsProvider();
 
 var app = builder.Build();
 

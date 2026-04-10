@@ -21,6 +21,15 @@ public static class Configuration
             Environment.GetEnvironmentVariable("DATABASE_URL")
                 ?? throw new Exception("DATABASE_URL is not set")
         );
+
+    public static ElevenLabsConfiguration ElevenLabs { get; } =
+        new(
+            Environment.GetEnvironmentVariable("ELEVENLABS_API_KEY")
+                ?? throw new Exception("ELEVENLABS_API_KEY is not set"),
+            Environment.GetEnvironmentVariable("ELEVENLABS_BASE_URL") ?? "https://api.elevenlabs.io"
+        );
 }
 
 public record DatabaseConfiguration(string ConnectionString);
+
+public record ElevenLabsConfiguration(string ApiKey, string BaseUrl);
