@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Teleagents.Providers.Abstractions.Contracts;
+using Teleagents.Providers.ElevenLabs.Extensions;
 using Teleagents.Providers.ElevenLabs.Generated.Models;
 
 namespace Teleagents.Providers.ElevenLabs.Mapping;
@@ -13,8 +14,8 @@ public static class ElevenLabsVoiceProviderMapper
             agent.Name ?? string.Empty,
             agent.Archived ?? false,
             agent.Tags ?? [],
-            FromUnixSeconds(agent.CreatedAtUnixSecs),
-            FromUnixSeconds(GetIntegerValue(agent.LastCallTimeUnixSecs))
+            agent.CreatedAtUnixSecs.ToUtcDateTimeFromUnixSeconds(),
+            agent.LastCallTimeUnixSecs.AsIntegerValue().ToUtcDateTimeFromUnixSeconds()
         );
     }
 
@@ -27,11 +28,11 @@ public static class ElevenLabsVoiceProviderMapper
             agent.AgentId ?? string.Empty,
             agent.Name ?? string.Empty,
             agent.Tags ?? [],
-            FromUnixSeconds(agent.Metadata?.CreatedAtUnixSecs),
-            FromUnixSeconds(agent.Metadata?.UpdatedAtUnixSecs),
-            GetStringValue(agent.BranchId),
-            GetStringValue(agent.MainBranchId),
-            GetStringValue(agent.VersionId),
+            agent.Metadata?.CreatedAtUnixSecs.ToUtcDateTimeFromUnixSeconds(),
+            agent.Metadata?.UpdatedAtUnixSecs.ToUtcDateTimeFromUnixSeconds(),
+            agent.BranchId.AsStringValue(),
+            agent.MainBranchId.AsStringValue(),
+            agent.VersionId.AsStringValue(),
             prompt?.Prompt ?? string.Empty,
             config?.FirstMessage ?? string.Empty,
             config?.Language ?? string.Empty,
@@ -51,12 +52,12 @@ public static class ElevenLabsVoiceProviderMapper
         return new VoiceProviderConversationListItem(
             conversation.ConversationId ?? string.Empty,
             conversation.AgentId ?? string.Empty,
-            GetStringValue(conversation.AgentName),
-            GetStringValue(conversation.BranchId),
-            FromUnixSeconds(conversation.StartTimeUnixSecs),
+            conversation.AgentName.AsStringValue(),
+            conversation.BranchId.AsStringValue(),
+            conversation.StartTimeUnixSecs.ToUtcDateTimeFromUnixSeconds(),
             conversation.CallDurationSecs ?? 0,
-            MapConversationStatus(conversation.Status),
-            MapConversationDirection(conversation.Direction),
+            conversation.Status.ToVoiceProviderConversationStatus(),
+            conversation.Direction.ToVoiceProviderConversationDirection(),
             conversation.CallSuccessful switch
             {
                 EvaluationSuccessResult.Success => true,
@@ -64,9 +65,9 @@ public static class ElevenLabsVoiceProviderMapper
                 _ => null,
             },
             conversation.MessageCount ?? 0,
-            GetStringValue(conversation.MainLanguage),
-            GetStringValue(conversation.CallSummaryTitle),
-            GetStringValue(conversation.TranscriptSummary),
+            conversation.MainLanguage.AsStringValue(),
+            conversation.CallSummaryTitle.AsStringValue(),
+            conversation.TranscriptSummary.AsStringValue(),
             conversation.TerminationReason ?? string.Empty
         );
     }
@@ -76,32 +77,32 @@ public static class ElevenLabsVoiceProviderMapper
     )
     {
         var transcript = conversation.Transcript?.Select(MapTranscriptTurn).ToArray() ?? [];
-        var startTimeUtc = FromUnixSeconds(conversation.Metadata?.StartTimeUnixSecs);
+        var startTimeUtc = conversation.Metadata?.StartTimeUnixSecs.ToUtcDateTimeFromUnixSeconds();
         var durationSeconds = conversation.Metadata?.CallDurationSecs ?? 0;
-        var mainLanguage = GetStringValue(conversation.Metadata?.MainLanguage);
-        var terminationReason = GetStringValue(conversation.Metadata?.TerminationReason);
+        var mainLanguage = conversation.Metadata?.MainLanguage.AsStringValue();
+        var terminationReason = conversation.Metadata?.TerminationReason.AsStringValue();
 
         return new VoiceProviderConversationDetailResponse(
             conversation.ConversationId ?? string.Empty,
             conversation.AgentId ?? string.Empty,
-            GetStringValue(conversation.AgentName),
-            GetStringValue(conversation.BranchId),
+            conversation.AgentName.AsStringValue(),
+            conversation.BranchId.AsStringValue(),
             startTimeUtc,
             durationSeconds,
-            MapConversationStatus(conversation.Status),
+            conversation.Status.ToVoiceProviderConversationStatus(),
             null,
             null,
             transcript.Length,
             mainLanguage,
-            GetStringValue(conversation.Analysis?.CallSummaryTitle),
-            GetStringValue(conversation.Analysis?.TranscriptSummary),
+            conversation.Analysis?.CallSummaryTitle.AsStringValue(),
+            conversation.Analysis?.TranscriptSummary.AsStringValue(),
             terminationReason,
             conversation.HasAudio ?? false,
             conversation.HasUserAudio ?? false,
             conversation.HasResponseAudio ?? false,
             conversation.Environment ?? string.Empty,
-            GetStringValue(conversation.VersionId),
-            GetStringValue(conversation.UserId),
+            conversation.VersionId.AsStringValue(),
+            conversation.UserId.AsStringValue(),
             transcript,
             JsonSerializer.Serialize(conversation.Transcript ?? [])
         );
@@ -109,7 +110,7 @@ public static class ElevenLabsVoiceProviderMapper
 
     public static string GetNextCursorValue(object? wrapper)
     {
-        return GetStringValue(wrapper);
+        return wrapper.AsStringValue();
     }
 
     private static IReadOnlyList<VoiceProviderPhoneNumber> MapPhoneNumbers(
@@ -154,95 +155,11 @@ public static class ElevenLabsVoiceProviderMapper
     {
         return new VoiceProviderTranscriptTurn(
             turn.Role?.ToString() ?? string.Empty,
-            GetStringValue(turn.Message),
-            GetStringValue(turn.OriginalMessage),
+            turn.Message.AsStringValue(),
+            turn.OriginalMessage.AsStringValue(),
             turn.TimeInCallSecs,
             turn.Interrupted ?? false,
             turn.SourceMedium?.ToString() ?? string.Empty
         );
-    }
-
-    private static DateTime? FromUnixSeconds(int? value)
-    {
-        return value.HasValue ? DateTimeOffset.FromUnixTimeSeconds(value.Value).UtcDateTime : null;
-    }
-
-    private static VoiceProviderConversationDirection? MapConversationDirection(
-        TelephonyDirection? direction
-    )
-    {
-        return direction switch
-        {
-            TelephonyDirection.Inbound => VoiceProviderConversationDirection.Inbound,
-            TelephonyDirection.Outbound => VoiceProviderConversationDirection.Outbound,
-            _ => null,
-        };
-    }
-
-    private static VoiceProviderConversationStatus? MapConversationStatus(
-        ConversationSummaryResponseModel_status? status
-    )
-    {
-        return status switch
-        {
-            ConversationSummaryResponseModel_status.Initiated =>
-                VoiceProviderConversationStatus.Initiated,
-            ConversationSummaryResponseModel_status.InProgress =>
-                VoiceProviderConversationStatus.InProgress,
-            ConversationSummaryResponseModel_status.Processing =>
-                VoiceProviderConversationStatus.Processing,
-            ConversationSummaryResponseModel_status.Done => VoiceProviderConversationStatus.Done,
-            ConversationSummaryResponseModel_status.Failed =>
-                VoiceProviderConversationStatus.Failed,
-            _ => null,
-        };
-    }
-
-    private static VoiceProviderConversationStatus? MapConversationStatus(
-        GetConversationResponseModel_status? status
-    )
-    {
-        return status switch
-        {
-            GetConversationResponseModel_status.Initiated =>
-                VoiceProviderConversationStatus.Initiated,
-            GetConversationResponseModel_status.InProgress =>
-                VoiceProviderConversationStatus.InProgress,
-            GetConversationResponseModel_status.Processing =>
-                VoiceProviderConversationStatus.Processing,
-            GetConversationResponseModel_status.Done => VoiceProviderConversationStatus.Done,
-            GetConversationResponseModel_status.Failed => VoiceProviderConversationStatus.Failed,
-            _ => null,
-        };
-    }
-
-    private static string GetStringValue(object? wrapper)
-    {
-        if (wrapper is null)
-        {
-            return string.Empty;
-        }
-
-        if (wrapper is string value)
-        {
-            return value;
-        }
-
-        return wrapper.GetType().GetProperty("String")?.GetValue(wrapper) as string ?? string.Empty;
-    }
-
-    private static int? GetIntegerValue(object? wrapper)
-    {
-        if (wrapper is null)
-        {
-            return null;
-        }
-
-        if (wrapper is int value)
-        {
-            return value;
-        }
-
-        return wrapper.GetType().GetProperty("Integer")?.GetValue(wrapper) as int?;
     }
 }
