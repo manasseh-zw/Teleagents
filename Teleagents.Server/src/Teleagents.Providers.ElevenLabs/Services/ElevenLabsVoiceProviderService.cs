@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Teleagents.Providers.Abstractions.Contracts;
 using Teleagents.Providers.Abstractions.Helpers;
 using Teleagents.Providers.ElevenLabs.Generated;
@@ -9,15 +8,10 @@ namespace Teleagents.Providers.ElevenLabs.Services;
 public class ElevenLabsVoiceProviderService : IVoiceProviderService
 {
     private readonly ElevenLabsApiClient _client;
-    private readonly ILogger<ElevenLabsVoiceProviderService> _logger;
 
-    public ElevenLabsVoiceProviderService(
-        ElevenLabsApiClient client,
-        ILogger<ElevenLabsVoiceProviderService> logger
-    )
+    public ElevenLabsVoiceProviderService(ElevenLabsApiClient client)
     {
         _client = client;
-        _logger = logger;
     }
 
     public async Task<
@@ -27,47 +21,37 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
         CancellationToken cancellationToken = default
     )
     {
-        try
-        {
-            var response = await _client.V1.Convai.Agents.GetAsync(
-                config =>
-                {
-                    config.QueryParameters.Archived = request.IncludeArchived ? null : false;
-                    config.QueryParameters.PageSize = request.PageSize;
-                    config.QueryParameters.Cursor = NullIfEmpty(request.Cursor);
-                    config.QueryParameters.Search = NullIfEmpty(request.Search);
-                },
-                cancellationToken
-            );
+        var response = await _client.V1.Convai.Agents.GetAsync(
+            config =>
+            {
+                config.QueryParameters.Archived = request.IncludeArchived ? null : false;
+                config.QueryParameters.PageSize = request.PageSize;
+                config.QueryParameters.Cursor = NullIfEmpty(request.Cursor);
+                config.QueryParameters.Search = NullIfEmpty(request.Search);
+            },
+            cancellationToken
+        );
 
-            var items =
-                response
-                    ?.Agents?.Where(agent =>
-                        request.ProviderAgentIds is null
-                        || request.ProviderAgentIds.Count == 0
-                        || (
-                            !string.IsNullOrWhiteSpace(agent.AgentId)
-                            && request.ProviderAgentIds.Contains(agent.AgentId)
-                        )
+        var items =
+            response
+                ?.Agents?.Where(agent =>
+                    request.ProviderAgentIds is null
+                    || request.ProviderAgentIds.Count == 0
+                    || (
+                        !string.IsNullOrWhiteSpace(agent.AgentId)
+                        && request.ProviderAgentIds.Contains(agent.AgentId)
                     )
-                    .Select(ElevenLabsVoiceProviderMapper.MapAgentListItem)
-                    .ToArray() ?? [];
-
-            return Result<VoiceProviderPagedResponse<VoiceProviderAgentListItem>>.Success(
-                new VoiceProviderPagedResponse<VoiceProviderAgentListItem>(
-                    items,
-                    response?.HasMore ?? false,
-                    ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor)
                 )
-            );
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to list ElevenLabs agents");
-            return Result<VoiceProviderPagedResponse<VoiceProviderAgentListItem>>.Failure(
-                "Failed to list voice provider agents"
-            );
-        }
+                .Select(ElevenLabsVoiceProviderMapper.MapAgentListItem)
+                .ToArray() ?? [];
+
+        return Result<VoiceProviderPagedResponse<VoiceProviderAgentListItem>>.Success(
+            new VoiceProviderPagedResponse<VoiceProviderAgentListItem>(
+                items,
+                response?.HasMore ?? false,
+                ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor)
+            )
+        );
     }
 
     public async Task<Result<VoiceProviderAgentDetailResponse>> GetAgentAsync(
@@ -82,34 +66,20 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
             );
         }
 
-        try
-        {
-            var agent = await _client
-                .V1.Convai.Agents[providerAgentId]
-                .GetAsync(cancellationToken: cancellationToken);
+        var agent = await _client
+            .V1.Convai.Agents[providerAgentId]
+            .GetAsync(cancellationToken: cancellationToken);
 
-            if (agent is null || string.IsNullOrWhiteSpace(agent.AgentId))
-            {
-                return Result<VoiceProviderAgentDetailResponse>.Failure(
-                    "Voice provider agent not found"
-                );
-            }
-
-            return Result<VoiceProviderAgentDetailResponse>.Success(
-                ElevenLabsVoiceProviderMapper.MapAgentDetail(agent)
-            );
-        }
-        catch (Exception ex)
+        if (agent is null || string.IsNullOrWhiteSpace(agent.AgentId))
         {
-            _logger.LogError(
-                ex,
-                "Failed to get ElevenLabs agent {ProviderAgentId}",
-                providerAgentId
-            );
             return Result<VoiceProviderAgentDetailResponse>.Failure(
-                "Failed to retrieve voice provider agent"
+                "Voice provider agent not found"
             );
         }
+
+        return Result<VoiceProviderAgentDetailResponse>.Success(
+            ElevenLabsVoiceProviderMapper.MapAgentDetail(agent)
+        );
     }
 
     public async Task<
@@ -119,63 +89,41 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
         CancellationToken cancellationToken = default
     )
     {
-        try
-        {
-            var response = await _client.V1.Convai.Conversations.GetAsync(
-                config =>
-                {
-                    config.QueryParameters.AgentId = NullIfEmpty(request.ProviderAgentId);
-                    config.QueryParameters.BranchId = NullIfEmpty(request.BranchId);
-                    config.QueryParameters.Cursor = NullIfEmpty(request.Cursor);
-                    config.QueryParameters.PageSize = request.PageSize;
-                    config.QueryParameters.CallStartAfterUnix = ToUnixSeconds(
-                        request.StartedAfterUtc
-                    );
-                    config.QueryParameters.CallStartBeforeUnix = ToUnixSeconds(
-                        request.StartedBeforeUtc
-                    );
-                    config.QueryParameters.CallDurationMinSecs = request.MinDurationSeconds;
-                    config.QueryParameters.CallDurationMaxSecs = request.MaxDurationSeconds;
-                    config.QueryParameters.CallSuccessful = request
-                        .Success?.ToString()
-                        .ToLowerInvariant();
-                    config.QueryParameters.SummaryMode = request.IncludeSummaries
-                        ? Generated
-                            .V1
-                            .Convai
-                            .Conversations
-                            .GetSummary_modeQueryParameterType
-                            .Include
-                        : Generated
-                            .V1
-                            .Convai
-                            .Conversations
-                            .GetSummary_modeQueryParameterType
-                            .Exclude;
-                },
-                cancellationToken
-            );
+        var response = await _client.V1.Convai.Conversations.GetAsync(
+            config =>
+            {
+                config.QueryParameters.AgentId = NullIfEmpty(request.ProviderAgentId);
+                config.QueryParameters.BranchId = NullIfEmpty(request.BranchId);
+                config.QueryParameters.Cursor = NullIfEmpty(request.Cursor);
+                config.QueryParameters.PageSize = request.PageSize;
+                config.QueryParameters.CallStartAfterUnix = ToUnixSeconds(request.StartedAfterUtc);
+                config.QueryParameters.CallStartBeforeUnix = ToUnixSeconds(
+                    request.StartedBeforeUtc
+                );
+                config.QueryParameters.CallDurationMinSecs = request.MinDurationSeconds;
+                config.QueryParameters.CallDurationMaxSecs = request.MaxDurationSeconds;
+                config.QueryParameters.CallSuccessful = request
+                    .Success?.ToString()
+                    .ToLowerInvariant();
+                config.QueryParameters.SummaryMode = request.IncludeSummaries
+                    ? Generated.V1.Convai.Conversations.GetSummary_modeQueryParameterType.Include
+                    : Generated.V1.Convai.Conversations.GetSummary_modeQueryParameterType.Exclude;
+            },
+            cancellationToken
+        );
 
-            var items =
-                response
-                    ?.Conversations?.Select(ElevenLabsVoiceProviderMapper.MapConversationListItem)
-                    .ToArray() ?? [];
+        var items =
+            response
+                ?.Conversations?.Select(ElevenLabsVoiceProviderMapper.MapConversationListItem)
+                .ToArray() ?? [];
 
-            return Result<VoiceProviderPagedResponse<VoiceProviderConversationListItem>>.Success(
-                new VoiceProviderPagedResponse<VoiceProviderConversationListItem>(
-                    items,
-                    response?.HasMore ?? false,
-                    ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor)
-                )
-            );
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to list ElevenLabs conversations");
-            return Result<VoiceProviderPagedResponse<VoiceProviderConversationListItem>>.Failure(
-                "Failed to list voice provider conversations"
-            );
-        }
+        return Result<VoiceProviderPagedResponse<VoiceProviderConversationListItem>>.Success(
+            new VoiceProviderPagedResponse<VoiceProviderConversationListItem>(
+                items,
+                response?.HasMore ?? false,
+                ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor)
+            )
+        );
     }
 
     public async Task<Result<VoiceProviderConversationDetailResponse>> GetConversationAsync(
@@ -190,34 +138,20 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
             );
         }
 
-        try
-        {
-            var conversation = await _client
-                .V1.Convai.Conversations[conversationId]
-                .GetAsync(cancellationToken: cancellationToken);
+        var conversation = await _client
+            .V1.Convai.Conversations[conversationId]
+            .GetAsync(cancellationToken: cancellationToken);
 
-            if (conversation is null || string.IsNullOrWhiteSpace(conversation.ConversationId))
-            {
-                return Result<VoiceProviderConversationDetailResponse>.Failure(
-                    "Voice provider conversation not found"
-                );
-            }
-
-            return Result<VoiceProviderConversationDetailResponse>.Success(
-                ElevenLabsVoiceProviderMapper.MapConversationDetail(conversation)
-            );
-        }
-        catch (Exception ex)
+        if (conversation is null || string.IsNullOrWhiteSpace(conversation.ConversationId))
         {
-            _logger.LogError(
-                ex,
-                "Failed to get ElevenLabs conversation {ConversationId}",
-                conversationId
-            );
             return Result<VoiceProviderConversationDetailResponse>.Failure(
-                "Failed to retrieve voice provider conversation"
+                "Voice provider conversation not found"
             );
         }
+
+        return Result<VoiceProviderConversationDetailResponse>.Success(
+            ElevenLabsVoiceProviderMapper.MapConversationDetail(conversation)
+        );
     }
 
     private static int? ToUnixSeconds(DateTime? value)

@@ -102,7 +102,11 @@ public record VoiceProviderTranscriptTurn(
     string SourceMedium
 );
 
-public record VoiceProviderPagedResponse<T>(IReadOnlyList<T> Items, bool HasMore, string NextCursor);
+public record VoiceProviderPagedResponse<T>(
+    IReadOnlyList<T> Items,
+    bool HasMore,
+    string NextCursor
+);
 
 public enum VoiceProviderConversationDirection
 {
