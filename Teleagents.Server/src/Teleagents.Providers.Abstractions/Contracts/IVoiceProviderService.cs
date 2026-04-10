@@ -14,11 +14,12 @@ public interface IVoiceProviderService
         CancellationToken cancellationToken = default
     );
 
-    Task<Result<VoiceProviderPagedResponse<VoiceProviderConversationListItem>>>
-        ListConversationsAsync(
-            VoiceProviderListConversationsRequest request,
-            CancellationToken cancellationToken = default
-        );
+    Task<
+        Result<VoiceProviderPagedResponse<VoiceProviderConversationListItem>>
+    > ListConversationsAsync(
+        VoiceProviderListConversationsRequest request,
+        CancellationToken cancellationToken = default
+    );
 
     Task<Result<VoiceProviderConversationDetailResponse>> GetConversationAsync(
         string conversationId,
