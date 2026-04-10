@@ -185,7 +185,6 @@ public class TicketService : ITicketService
 
 ### Method Patterns
 
-- **No `Async` suffix on method names.** `GetTickets`, not `GetTicketsAsync`. This is a firm rule.
 - Methods that perform reads: return `Result.Ok(data)` on success.
 - Methods that perform writes (create/update/delete): either return the newly created/updated entity or a success message.
 - Null checks for entity lookups come **immediately** after the query: `if (entity == null) return Result.Fail("...")`.

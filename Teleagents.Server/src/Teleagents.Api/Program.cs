@@ -19,6 +19,7 @@ builder
 
 builder.Services.ConfigureExceptionHandler();
 builder.Services.ConfigureDatabase(Configuration.Database.ConnectionString);
+builder.Services.ConfigureDomainServices();
 builder.Services.AddElevenLabsProvider();
 
 var app = builder.Build();
