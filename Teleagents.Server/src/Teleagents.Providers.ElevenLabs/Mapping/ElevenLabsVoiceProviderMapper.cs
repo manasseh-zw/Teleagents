@@ -81,6 +81,8 @@ public static class ElevenLabsVoiceProviderMapper
         var durationSeconds = conversation.Metadata?.CallDurationSecs ?? 0;
         var mainLanguage = conversation.Metadata?.MainLanguage.AsStringValue();
         var terminationReason = conversation.Metadata?.TerminationReason.AsStringValue();
+        var summaryTitle = ((object?)conversation.Analysis?.CallSummaryTitle).AsStringValue();
+        var transcriptSummary = ((object?)conversation.Analysis?.TranscriptSummary).AsStringValue();
 
         return new VoiceProviderConversationDetailResponse(
             conversation.ConversationId ?? string.Empty,
@@ -94,8 +96,8 @@ public static class ElevenLabsVoiceProviderMapper
             null,
             transcript.Length,
             mainLanguage,
-            conversation.Analysis?.CallSummaryTitle.AsStringValue(),
-            conversation.Analysis?.TranscriptSummary.AsStringValue(),
+            summaryTitle,
+            transcriptSummary,
             terminationReason,
             conversation.HasAudio ?? false,
             conversation.HasUserAudio ?? false,

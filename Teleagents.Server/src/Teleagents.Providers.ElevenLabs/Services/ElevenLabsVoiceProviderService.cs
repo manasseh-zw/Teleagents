@@ -2,6 +2,7 @@ using Microsoft.Kiota.Abstractions;
 using Teleagents.Providers.Abstractions.Contracts;
 using Teleagents.Providers.Abstractions.Helpers;
 using Teleagents.Providers.ElevenLabs.Generated;
+using Teleagents.Providers.ElevenLabs.Generated.Models;
 using Teleagents.Providers.ElevenLabs.Mapping;
 
 namespace Teleagents.Providers.ElevenLabs.Services;
