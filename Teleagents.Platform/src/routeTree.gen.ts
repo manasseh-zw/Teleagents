@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as OutboundRouteImport } from './routes/outbound'
 import { Route as CallHistoryRouteImport } from './routes/call-history'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutboundRoute = OutboundRouteImport.update({
+  id: '/outbound',
+  path: '/outbound',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CallHistoryRoute = CallHistoryRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/call-history': typeof CallHistoryRoute
+  '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/call-history': typeof CallHistoryRoute
+  '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/agents': typeof AgentsRoute
   '/call-history': typeof CallHistoryRoute
+  '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/call-history' | '/settings'
+  fullPaths: '/' | '/agents' | '/call-history' | '/outbound' | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/call-history' | '/settings'
-  id: '__root__' | '/' | '/agents' | '/call-history' | '/settings'
+  to: '/' | '/agents' | '/call-history' | '/outbound' | '/settings'
+  id: '__root__' | '/' | '/agents' | '/call-history' | '/outbound' | '/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgentsRoute: typeof AgentsRoute
   CallHistoryRoute: typeof CallHistoryRoute
+  OutboundRoute: typeof OutboundRoute
   SettingsRoute: typeof SettingsRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outbound': {
+      id: '/outbound'
+      path: '/outbound'
+      fullPath: '/outbound'
+      preLoaderRoute: typeof OutboundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/call-history': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgentsRoute: AgentsRoute,
   CallHistoryRoute: CallHistoryRoute,
+  OutboundRoute: OutboundRoute,
   SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport

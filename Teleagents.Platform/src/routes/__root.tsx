@@ -1,14 +1,15 @@
+import { ContentHeader } from "@/components/sidebar/content-header"
+import { DashboardSidebar } from "@/components/sidebar/app-sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import type { QueryClient } from "@tanstack/react-query"
+import { QueryClientProvider } from "@tanstack/react-query"
 import {
   HeadContent,
   Outlet,
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router"
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
-import { TanStackDevtools } from "@tanstack/react-devtools"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
-import { TooltipProvider } from "@/components/ui/tooltip"
 
 import appCss from "../styles.css?url"
 
@@ -47,17 +48,17 @@ function RootApp() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Outlet />
-        <TanStackDevtools
-          config={{ position: "bottom-right" }}
-          plugins={[
-            {
-              name: "Tanstack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
-        <ReactQueryDevtools buttonPosition="bottom-left" />
+        <SidebarProvider>
+          <div className="relative flex h-dvh w-full">
+            <DashboardSidebar />
+            <SidebarInset className="flex flex-col overflow-hidden">
+              <ContentHeader />
+              <div className="flex-1 overflow-auto p-4 md:p-6">
+                <Outlet />
+              </div>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
       </TooltipProvider>
     </QueryClientProvider>
   )
