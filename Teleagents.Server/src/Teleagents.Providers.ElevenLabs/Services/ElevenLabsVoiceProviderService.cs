@@ -1,3 +1,4 @@
+using Microsoft.Kiota.Abstractions;
 using Teleagents.Providers.Abstractions.Contracts;
 using Teleagents.Providers.Abstractions.Helpers;
 using Teleagents.Providers.ElevenLabs.Generated;
@@ -66,9 +67,18 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
             );
         }
 
-        var agent = await _client
-            .V1.Convai.Agents[providerAgentId]
-            .GetAsync(cancellationToken: cancellationToken);
+        GetAgentResponseModel? agent;
+
+        try
+        {
+            agent = await _client
+                .V1.Convai.Agents[providerAgentId]
+                .GetAsync(cancellationToken: cancellationToken);
+        }
+        catch (ApiException ex) when (IsNotFound(ex))
+        {
+            return Result<VoiceProviderAgentDetailResponse>.Failure("Voice provider agent not found");
+        }
 
         if (agent is null || string.IsNullOrWhiteSpace(agent.AgentId))
         {
@@ -138,9 +148,20 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
             );
         }
 
-        var conversation = await _client
-            .V1.Convai.Conversations[conversationId]
-            .GetAsync(cancellationToken: cancellationToken);
+        GetConversationResponseModel? conversation;
+
+        try
+        {
+            conversation = await _client
+                .V1.Convai.Conversations[conversationId]
+                .GetAsync(cancellationToken: cancellationToken);
+        }
+        catch (ApiException ex) when (IsNotFound(ex))
+        {
+            return Result<VoiceProviderConversationDetailResponse>.Failure(
+                "Voice provider conversation not found"
+            );
+        }
 
         if (conversation is null || string.IsNullOrWhiteSpace(conversation.ConversationId))
         {
@@ -154,6 +175,73 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
         );
     }
 
+    public async Task<Result<VoiceProviderConversationAudioMetadataResponse>> GetConversationAudioMetadataAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var conversationResult = await GetConversationAsync(conversationId, cancellationToken);
+        if (conversationResult.IsFailure)
+        {
+            return Result<VoiceProviderConversationAudioMetadataResponse>.Failure(
+                conversationResult.Errors
+            );
+        }
+
+        var conversation = conversationResult.Value!;
+
+        return Result<VoiceProviderConversationAudioMetadataResponse>.Success(
+            new VoiceProviderConversationAudioMetadataResponse(
+                conversation.HasAudio,
+                "audio/mpeg",
+                $"{conversationId}.mp3"
+            )
+        );
+    }
+
+    public async Task<Result<VoiceProviderConversationAudioResponse>> GetConversationAudioAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(conversationId))
+        {
+            return Result<VoiceProviderConversationAudioResponse>.Failure(
+                "Conversation ID is required"
+            );
+        }
+
+        Stream? audioStream;
+
+        try
+        {
+            audioStream = await _client
+                .V1.Convai.Conversations[conversationId]
+                .Audio.GetAsync(cancellationToken: cancellationToken);
+        }
+        catch (ApiException ex) when (IsNotFound(ex))
+        {
+            return Result<VoiceProviderConversationAudioResponse>.Failure(
+                "Voice provider conversation audio not found"
+            );
+        }
+
+        if (audioStream is null)
+        {
+            return Result<VoiceProviderConversationAudioResponse>.Failure(
+                "Voice provider conversation audio not found"
+            );
+        }
+
+        return Result<VoiceProviderConversationAudioResponse>.Success(
+            new VoiceProviderConversationAudioResponse(
+                audioStream,
+                "audio/mpeg",
+                $"{conversationId}.mp3"
+            )
+        );
+    }
+
     private static int? ToUnixSeconds(DateTime? value)
     {
         return value.HasValue ? (int)new DateTimeOffset(value.Value).ToUnixTimeSeconds() : null;
@@ -162,5 +250,10 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
     private static string? NullIfEmpty(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private static bool IsNotFound(ApiException exception)
+    {
+        return exception.ResponseStatusCode == 404;
     }
 }

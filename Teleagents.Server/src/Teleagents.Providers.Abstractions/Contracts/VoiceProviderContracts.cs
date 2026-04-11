@@ -93,6 +93,18 @@ public record VoiceProviderConversationDetailResponse(
     string RawTranscriptPayload
 );
 
+public record VoiceProviderConversationAudioMetadataResponse(
+    bool HasAudio,
+    string ContentType,
+    string FileName
+);
+
+public record VoiceProviderConversationAudioResponse(
+    Stream AudioStream,
+    string ContentType,
+    string FileName
+);
+
 public record VoiceProviderTranscriptTurn(
     string Role,
     string Message,

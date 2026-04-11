@@ -1,0 +1,23 @@
+@baseUrl = http://localhost:5047
+@tatendaAgentId = 820ea8ee-f0b5-44fe-b124-ef1d88cbaece
+@nomsaAgentId = ec641859-91a7-4d98-99cb-73c347286d84
+
+### Get agents
+GET {{baseUrl}}/api/agents
+Accept: application/json
+
+### Get active agents
+GET {{baseUrl}}/api/agents?isActive=true
+Accept: application/json
+
+### Search agents
+GET {{baseUrl}}/api/agents?search=demo
+Accept: application/json
+
+### Get agent detail
+GET {{baseUrl}}/api/agents/{{tatendaAgentId}}
+Accept: application/json
+
+### Get second agent detail
+GET {{baseUrl}}/api/agents/{{nomsaAgentId}}
+Accept: application/json

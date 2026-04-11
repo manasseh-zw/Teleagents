@@ -26,9 +26,7 @@ public static class Configuration
     }
 
     public static DatabaseConfiguration Database =>
-        new(
-            GetRequiredEnvironmentVariable("DATABASE_URL")
-        );
+        new(GetRequiredEnvironmentVariable("DATABASE_URL"));
 
     public static ElevenLabsConfiguration ElevenLabs =>
         new(
@@ -36,16 +34,14 @@ public static class Configuration
             Environment.GetEnvironmentVariable("ELEVENLABS_BASE_URL") ?? "https://api.elevenlabs.io"
         );
 
-    public static ApiConfiguration Api =>
-        new(
-            GetRequiredGuid("DEFAULT_TENANT_ID")
-        );
+    public static ApiConfiguration Api => new(GetRequiredGuid("DEFAULT_TENANT_ID"));
 
     private static string GetRequiredEnvironmentVariable(string name)
     {
         EnsureInitialized();
 
-        return Environment.GetEnvironmentVariable(name) ?? throw new Exception($"{name} is not set");
+        return Environment.GetEnvironmentVariable(name)
+            ?? throw new Exception($"{name} is not set");
     }
 
     private static Guid GetRequiredGuid(string name)

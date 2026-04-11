@@ -1,0 +1,31 @@
+@baseUrl = http://localhost:5047
+@tatendaAgentId = 820ea8ee-f0b5-44fe-b124-ef1d88cbaece
+@nomsaAgentId = ec641859-91a7-4d98-99cb-73c347286d84
+@conversationId = conv_7901knvn8bxceevt5bvyecz3pwcf
+
+### Get call logs across all mapped agents
+GET {{baseUrl}}/api/call-logs
+Accept: application/json
+
+### Get call logs for a single agent
+GET {{baseUrl}}/api/call-logs?agentId={{tatendaAgentId}}
+Accept: application/json
+
+### Get call logs for a single agent with page size
+GET {{baseUrl}}/api/call-logs?agentId={{nomsaAgentId}}&pageSize=10
+Accept: application/json
+
+### Get filtered call logs across all mapped agents
+GET {{baseUrl}}/api/call-logs?pageSize=10&startedAfterUtc=2026-01-01T00:00:00Z
+Accept: application/json
+
+### Get call log detail
+GET {{baseUrl}}/api/call-logs/{{conversationId}}
+Accept: application/json
+
+### Get call log audio metadata
+GET {{baseUrl}}/api/call-logs/{{conversationId}}/audio/metadata
+Accept: application/json
+
+### Stream call log audio
+GET {{baseUrl}}/api/call-logs/{{conversationId}}/audio

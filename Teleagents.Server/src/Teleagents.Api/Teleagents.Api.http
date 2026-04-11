@@ -1,6 +1,9 @@
 @Teleagents.Api_HostAddress = http://localhost:5047
 
-GET {{Teleagents.Api_HostAddress}}/weatherforecast/
+GET {{Teleagents.Api_HostAddress}}/api/agents
 Accept: application/json
 
 ###
+
+GET {{Teleagents.Api_HostAddress}}/api/call-logs
+Accept: application/json

@@ -49,6 +49,17 @@ public record GetCallLogResponse(
     IReadOnlyList<CallLogTranscriptTurn> Transcript
 );
 
+public record GetCallLogAudioMetadataResponse(
+    string ConversationId,
+    Guid AgentId,
+    string AgentDisplayName,
+    bool HasAudio,
+    string ContentType,
+    string FileName
+);
+
+public record GetCallLogAudioResponse(Stream AudioStream, string ContentType, string FileName);
+
 public record CallLogTranscriptTurn(
     string Role,
     string Message,

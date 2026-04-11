@@ -32,4 +32,38 @@ public class CallLogsController : ControllerBase
         var result = await _callLogsService.GetCallLogAsync(conversationId, cancellationToken);
         return result.IsFailure ? BadRequest(result.Errors) : Ok(result.Value);
     }
+
+    [HttpGet("{conversationId}/audio/metadata")]
+    public async Task<IActionResult> GetCallLogAudioMetadataAsync(
+        [FromRoute] string conversationId,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await _callLogsService.GetCallLogAudioMetadataAsync(
+            conversationId,
+            cancellationToken
+        );
+
+        return result.IsFailure ? BadRequest(result.Errors) : Ok(result.Value);
+    }
+
+    [HttpGet("{conversationId}/audio")]
+    public async Task<IActionResult> GetCallLogAudioAsync(
+        [FromRoute] string conversationId,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await _callLogsService.GetCallLogAudioAsync(conversationId, cancellationToken);
+        if (result.IsFailure)
+        {
+            return BadRequest(result.Errors);
+        }
+
+        return File(
+            result.Value!.AudioStream,
+            result.Value.ContentType,
+            result.Value.FileName,
+            enableRangeProcessing: true
+        );
+    }
 }

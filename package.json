@@ -1,0 +1,12 @@
+{
+  "name": "teleagents",
+  "private": true,
+  "scripts": {
+    "server": "dotnet run --project Teleagents.Server/src/Teleagents.Api/Teleagents.Api.csproj",
+    "client": "bun run --cwd Teleagents.Platform dev",
+    "start": "concurrently -n server,client -c cyan,magenta \"bun run server\" \"bun run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}

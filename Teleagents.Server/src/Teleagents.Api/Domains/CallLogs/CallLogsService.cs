@@ -17,6 +17,16 @@ public interface ICallLogsService
         string conversationId,
         CancellationToken cancellationToken = default
     );
+
+    Task<Result<GetCallLogAudioMetadataResponse>> GetCallLogAudioMetadataAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<Result<GetCallLogAudioResponse>> GetCallLogAudioAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    );
 }
 
 public class CallLogsService : ICallLogsService
@@ -127,15 +137,104 @@ public class CallLogsService : ICallLogsService
         CancellationToken cancellationToken = default
     )
     {
+        var contextResult = await GetConversationAccessContextAsync(
+            conversationId,
+            cancellationToken
+        );
+        if (contextResult.IsFailure)
+        {
+            return Result<GetCallLogResponse>.Failure(contextResult.Errors);
+        }
+
+        var context = contextResult.Value!;
+
+        return Result<GetCallLogResponse>.Success(
+            MapCallLogResponse(context.Agent, context.Conversation)
+        );
+    }
+
+    public async Task<Result<GetCallLogAudioMetadataResponse>> GetCallLogAudioMetadataAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var contextResult = await GetConversationAccessContextAsync(
+            conversationId,
+            cancellationToken
+        );
+        if (contextResult.IsFailure)
+        {
+            return Result<GetCallLogAudioMetadataResponse>.Failure(contextResult.Errors);
+        }
+
+        var context = contextResult.Value!;
+
+        return Result<GetCallLogAudioMetadataResponse>.Success(
+            new GetCallLogAudioMetadataResponse(
+                context.Conversation.ConversationId,
+                context.Agent.Id,
+                context.Agent.DisplayName,
+                context.Conversation.HasAudio,
+                "audio/mpeg",
+                $"{context.Conversation.ConversationId}.mp3"
+            )
+        );
+    }
+
+    public async Task<Result<GetCallLogAudioResponse>> GetCallLogAudioAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var contextResult = await GetConversationAccessContextAsync(
+            conversationId,
+            cancellationToken
+        );
+        if (contextResult.IsFailure)
+        {
+            return Result<GetCallLogAudioResponse>.Failure(contextResult.Errors);
+        }
+
+        var context = contextResult.Value!;
+
+        if (!context.Conversation.HasAudio)
+        {
+            return Result<GetCallLogAudioResponse>.Failure("Call log audio is not available");
+        }
+
+        var providerResult = await _voiceProviderService.GetConversationAudioAsync(
+            conversationId,
+            cancellationToken
+        );
+
+        if (providerResult.IsFailure)
+        {
+            return Result<GetCallLogAudioResponse>.Failure(providerResult.Errors);
+        }
+
+        return Result<GetCallLogAudioResponse>.Success(
+            new GetCallLogAudioResponse(
+                providerResult.Value!.AudioStream,
+                providerResult.Value.ContentType,
+                providerResult.Value.FileName
+            )
+        );
+    }
+
+    private async Task<Result<AccessibleConversationContext>> GetConversationAccessContextAsync(
+        string conversationId,
+        CancellationToken cancellationToken
+    )
+    {
         if (string.IsNullOrWhiteSpace(conversationId))
         {
-            return Result<GetCallLogResponse>.Failure("Conversation ID is required");
+            return Result<AccessibleConversationContext>.Failure("Conversation ID is required");
         }
 
         var tenantResult = await _currentTenantService.GetCurrentTenantAsync(cancellationToken);
         if (tenantResult.IsFailure)
         {
-            return Result<GetCallLogResponse>.Failure(tenantResult.Errors);
+            return Result<AccessibleConversationContext>.Failure(tenantResult.Errors);
         }
 
         var providerResult = await _voiceProviderService.GetConversationAsync(
@@ -145,7 +244,7 @@ public class CallLogsService : ICallLogsService
 
         if (providerResult.IsFailure)
         {
-            return Result<GetCallLogResponse>.Failure(providerResult.Errors);
+            return Result<AccessibleConversationContext>.Failure(providerResult.Errors);
         }
 
         var conversation = providerResult.Value!;
@@ -161,10 +260,12 @@ public class CallLogsService : ICallLogsService
 
         if (agent is null)
         {
-            return Result<GetCallLogResponse>.Failure("Call log not found");
+            return Result<AccessibleConversationContext>.Failure("Call log not found");
         }
 
-        return Result<GetCallLogResponse>.Success(MapCallLogResponse(agent, conversation));
+        return Result<AccessibleConversationContext>.Success(
+            new AccessibleConversationContext(agent, conversation)
+        );
     }
 
     private async Task<Result<GetCallLogsResponse>> GetSingleAgentCallLogsAsync(
@@ -328,4 +429,9 @@ public class CallLogsService : ICallLogsService
             _ => null,
         };
     }
+
+    private record AccessibleConversationContext(
+        AgentModel Agent,
+        VoiceProviderConversationDetailResponse Conversation
+    );
 }

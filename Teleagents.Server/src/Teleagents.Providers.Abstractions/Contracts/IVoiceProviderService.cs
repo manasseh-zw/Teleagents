@@ -25,4 +25,14 @@ public interface IVoiceProviderService
         string conversationId,
         CancellationToken cancellationToken = default
     );
+
+    Task<Result<VoiceProviderConversationAudioMetadataResponse>> GetConversationAudioMetadataAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<Result<VoiceProviderConversationAudioResponse>> GetConversationAudioAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default
+    );
 }
