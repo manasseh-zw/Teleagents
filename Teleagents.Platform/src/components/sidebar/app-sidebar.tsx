@@ -28,7 +28,7 @@ export function DashboardSidebar() {
             Teleagents
           </span>
         </a>
-        <div className="rounded-xl border border-sidebar-border/60 bg-sidebar-accent/40 px-2 py-2 group-data-[collapsible=icon]:rounded-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 dark:bg-sidebar-accent/25">
+        <div className="rounded-lg border border-sidebar-border/60 bg-sidebar-accent/40 px-2 py-2 group-data-[collapsible=icon]:rounded-none group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 dark:bg-sidebar-accent/25">
           <OrganizationIndicator
             name="CBZ Holdings"
             memberCount={1}
