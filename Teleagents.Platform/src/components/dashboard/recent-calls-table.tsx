@@ -37,17 +37,17 @@ const statusConfig: Record<CallStatus, { label: string; className: string }> = {
   completed: {
     label: "Completed",
     className:
-      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800",
+      "bg-chart-1/20 text-chart-4 border-chart-1/30 dark:bg-chart-1/12 dark:text-chart-1 dark:border-chart-1/25",
   },
   failed: {
     label: "Failed",
     className:
-      "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-800",
+      "bg-destructive/10 text-destructive border-destructive/25 dark:bg-destructive/15 dark:border-destructive/30",
   },
   voicemail: {
     label: "Voicemail",
     className:
-      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800",
+      "bg-chart-3/20 text-chart-4 border-chart-3/30 dark:bg-chart-3/12 dark:text-chart-3 dark:border-chart-3/22",
   },
   "no-answer": {
     label: "No answer",
@@ -69,7 +69,7 @@ export function RecentCallsTable() {
       const matchesSearch =
         search === "" ||
         call.client.toLowerCase().includes(search.toLowerCase()) ||
-        call.callId.toLowerCase().includes(search.toLowerCase()) ||
+        call.summary.toLowerCase().includes(search.toLowerCase()) ||
         call.agent.toLowerCase().includes(search.toLowerCase())
       const matchesStatus = statusFilter === "all" || call.status === statusFilter
       const matchesType = typeFilter === "all" || call.type === typeFilter
@@ -150,16 +150,16 @@ export function RecentCallsTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="table-fixed w-full min-w-[720px]">
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="pl-5 w-[120px] text-xs font-medium">Call ID</TableHead>
-              <TableHead className="min-w-[160px] text-xs font-medium">Client</TableHead>
-              <TableHead className="w-[100px] text-xs font-medium">Type</TableHead>
-              <TableHead className="min-w-[140px] text-xs font-medium">Agent</TableHead>
-              <TableHead className="w-[90px] text-xs font-medium">Duration</TableHead>
-              <TableHead className="w-[120px] text-xs font-medium">Status</TableHead>
-              <TableHead className="w-[140px] text-xs font-medium">Date</TableHead>
+              <TableHead className="pl-5 w-[15%] text-xs font-medium">Client</TableHead>
+              <TableHead className="w-[32%] text-xs font-medium">Summary</TableHead>
+              <TableHead className="w-[10%] text-xs font-medium">Type</TableHead>
+              <TableHead className="w-[14%] text-xs font-medium">Agent</TableHead>
+              <TableHead className="w-[8%] text-xs font-medium">Duration</TableHead>
+              <TableHead className="w-[11%] text-xs font-medium">Status</TableHead>
+              <TableHead className="w-[10%] pr-5 text-xs font-medium">Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,32 +173,37 @@ export function RecentCallsTable() {
             ) : (
               paginated.map((call) => (
                 <TableRow key={call.id} className="group">
-                  <TableCell className="pl-5">
-                    <span className="font-medium text-sm tabular-nums">{call.callId}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
+                  <TableCell className="pl-5 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <Avatar className="size-6 shrink-0">
                         <AvatarImage src={call.clientAvatar} />
                         <AvatarFallback className="text-[10px]">
                           {call.client.split(" ").map((n) => n[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium text-sm">{call.client}</span>
+                      <span className="font-medium text-sm truncate">{call.client}</span>
                     </div>
+                  </TableCell>
+                  <TableCell className="min-w-0 overflow-hidden">
+                    <p
+                      className="w-full truncate text-sm text-muted-foreground"
+                      title={call.summary}
+                    >
+                      {call.summary}
+                    </p>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       {call.type === "inbound" ? (
-                        <PhoneIncomingIcon className="size-3.5 text-blue-500 shrink-0" />
+                        <PhoneIncomingIcon className="size-3.5 text-chart-4 shrink-0" />
                       ) : (
-                        <PhoneOutgoingIcon className="size-3.5 text-violet-500 shrink-0" />
+                        <PhoneOutgoingIcon className="size-3.5 text-chart-2 shrink-0" />
                       )}
                       <span className="text-xs text-muted-foreground capitalize">{call.type}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-muted-foreground">{call.agent}</span>
+                  <TableCell className="min-w-0 overflow-hidden">
+                    <span className="block truncate text-sm text-muted-foreground">{call.agent}</span>
                   </TableCell>
                   <TableCell>
                     <span className="text-sm tabular-nums">{call.duration}</span>
@@ -211,9 +216,9 @@ export function RecentCallsTable() {
                       {statusConfig[call.status].label}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm text-muted-foreground">{call.date}</span>
+                  <TableCell className="min-w-0 pr-5">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <span className="text-sm text-muted-foreground truncate tabular-nums min-w-0">{call.date}</span>
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           className={cn(

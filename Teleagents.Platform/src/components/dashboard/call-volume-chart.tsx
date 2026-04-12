@@ -48,7 +48,7 @@ function CustomTooltip({ active, payload }: TooltipProps) {
         <p className="text-xs text-muted-foreground">Week {data.payload.week}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="font-semibold text-sm tabular-nums">{data.value} calls</span>
-          <span className="text-xs text-emerald-600 dark:text-emerald-400 tabular-nums">
+          <span className="text-xs text-chart-4 tabular-nums">
             {Number(change) >= 0 ? "+" : ""}{change}%
           </span>
         </div>
@@ -73,7 +73,7 @@ export function CallVolumeChart() {
   }
 
   const data = getDataForPeriod()
-  const lineColor = "#6e3ff3"
+  const lineColor = "var(--chart-4)"
   const gridColor = "var(--border)"
   const axisColor = "var(--muted-foreground)"
 
@@ -103,8 +103,8 @@ export function CallVolumeChart() {
           {gridEl}{xAxis}{yAxis}{tooltip}
           <defs>
             <linearGradient id="callBarGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6e3ff3" />
-              <stop offset="100%" stopColor="#aa8ef9" />
+              <stop offset="0%" stopColor="var(--chart-4)" />
+              <stop offset="100%" stopColor="var(--chart-1)" />
             </linearGradient>
           </defs>
           <Bar dataKey="calls" fill="url(#callBarGradient)" radius={[3, 3, 0, 0]} />
@@ -118,8 +118,8 @@ export function CallVolumeChart() {
           {gridEl}{xAxis}{yAxis}{tooltip}
           <defs>
             <linearGradient id="callAreaGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6e3ff3" stopOpacity={0.12} />
-              <stop offset="100%" stopColor="#6e3ff3" stopOpacity={0} />
+              <stop offset="0%" stopColor={lineColor} stopOpacity={0.2} />
+              <stop offset="100%" stopColor={lineColor} stopOpacity={0} />
             </linearGradient>
           </defs>
           <Area
@@ -129,7 +129,7 @@ export function CallVolumeChart() {
             strokeWidth={2}
             fill="url(#callAreaGradient)"
             dot={false}
-            activeDot={{ r: 5, fill: lineColor, stroke: "#fff", strokeWidth: 2 }}
+            activeDot={{ r: 5, fill: lineColor, stroke: "var(--background)", strokeWidth: 2 }}
           />
         </AreaChart>
       )
@@ -144,7 +144,7 @@ export function CallVolumeChart() {
           stroke={lineColor}
           strokeWidth={2}
           dot={false}
-          activeDot={{ r: 5, fill: lineColor, stroke: "#fff", strokeWidth: 2 }}
+          activeDot={{ r: 5, fill: lineColor, stroke: "var(--background)", strokeWidth: 2 }}
         />
       </LineChart>
     )

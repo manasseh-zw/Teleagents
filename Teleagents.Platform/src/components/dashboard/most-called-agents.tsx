@@ -30,10 +30,14 @@ export function MostCalledAgents() {
   const sorted = useMemo(() => {
     return [...mostCalledAgents].sort((a, b) => {
       switch (sortBy) {
-        case "calls_desc": return b.calls - a.calls
-        case "calls_asc": return a.calls - b.calls
-        case "name_asc": return a.name.localeCompare(b.name)
-        case "name_desc": return b.name.localeCompare(a.name)
+        case "calls_desc":
+          return b.calls - a.calls
+        case "calls_asc":
+          return a.calls - b.calls
+        case "name_asc":
+          return a.name.localeCompare(b.name)
+        case "name_desc":
+          return b.name.localeCompare(a.name)
       }
     })
   }, [sortBy])
@@ -41,13 +45,16 @@ export function MostCalledAgents() {
   const maxCalls = Math.max(...sorted.map((a) => a.calls), 1)
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl border h-full flex flex-col">
-      <div className="flex items-center justify-between px-5 py-4 border-b">
-        <h3 className="font-medium text-sm">Most called agents</h3>
+    <div className="flex h-full flex-col rounded-xl border bg-card text-card-foreground">
+      <div className="flex items-center justify-between border-b px-5 py-4">
+        <h3 className="text-sm font-medium">Most called agents</h3>
         <div className="flex items-center gap-1">
-          <span className="text-xs text-muted-foreground mr-1">Calls</span>
           <DropdownMenu>
-            <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon-sm" }))}>
+            <DropdownMenuTrigger
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" })
+              )}
+            >
               <MoreHorizontalIcon className="size-4 text-muted-foreground" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -80,15 +87,15 @@ export function MostCalledAgents() {
         </div>
       </div>
 
-      <div className="px-5 py-4 flex-1 flex flex-col justify-between gap-3">
+      <div className="flex flex-1 flex-col justify-between gap-3 px-5 py-4">
         {sorted.map((agent) => {
           const pct = (agent.calls / maxCalls) * 100
           const textColor = getTextColor(agent.color)
           return (
             <div key={agent.name} className="flex items-center gap-3">
-              <div className="flex-1 h-9 rounded-lg bg-muted overflow-hidden">
+              <div className="h-9 flex-1 overflow-hidden rounded-lg bg-muted">
                 <div
-                  className="h-full rounded-lg flex items-center px-3 transition-all duration-300"
+                  className="flex h-full items-center rounded-lg px-3 transition-all duration-300"
                   style={{
                     width: `${pct}%`,
                     backgroundColor: agent.color,
@@ -96,14 +103,14 @@ export function MostCalledAgents() {
                   }}
                 >
                   <span
-                    className="text-xs font-medium truncate leading-none"
+                    className="truncate text-xs leading-none font-medium"
                     style={{ color: textColor }}
                   >
                     {agent.name}
                   </span>
                 </div>
               </div>
-              <span className="text-sm font-semibold w-9 text-right shrink-0 tabular-nums">
+              <span className="w-9 shrink-0 text-right text-sm font-semibold tabular-nums">
                 {agent.calls}
               </span>
             </div>
@@ -111,8 +118,11 @@ export function MostCalledAgents() {
         })}
       </div>
 
-      <div className="border-t px-5 py-3 flex items-center justify-end">
-        <a href="/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+      <div className="flex items-center justify-end border-t px-5 py-3">
+        <a
+          href="/agents"
+          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+        >
           Show all →
         </a>
       </div>

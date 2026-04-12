@@ -6,13 +6,12 @@ const stats = [
   { title: "Total cost", value: dashboardStats.totalCost, unit: dashboardStats.totalCostUnit },
   { title: "Average cost", value: dashboardStats.avgCost.toLocaleString(), unit: dashboardStats.avgCostUnit },
   { title: "Total LLM cost", value: dashboardStats.totalLLMCost },
-  { title: "Average LLM cost", value: dashboardStats.avgLLMCost, unit: dashboardStats.avgLLMCostUnit },
 ]
 
 export function StatsCards() {
   return (
     <div className="rounded-xl border overflow-hidden">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-border">
         {stats.map((stat, i) => (
           <div key={i} className="bg-card px-5 py-4 flex flex-col gap-3">
             <p className="text-xs font-medium text-muted-foreground leading-none">{stat.title}</p>
