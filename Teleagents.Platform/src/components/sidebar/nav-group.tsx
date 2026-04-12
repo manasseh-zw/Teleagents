@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
+import type { SidebarRoute } from "@/components/sidebar/nav-links"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import type { SidebarRoute } from "@/components/sidebar/navigation"
+} from "@/components/ui/collapsible"
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -14,27 +14,27 @@ import {
   SidebarMenuSubButton,
   SidebarMenuItem as SidebarMenuSubItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+} from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
+import { Link, useRouterState } from "@tanstack/react-router"
+import { ChevronDown, ChevronUp } from "lucide-react"
+import { useState } from "react"
 
-export default function DashboardNavigation({ routes }: { routes: SidebarRoute[] }) {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
-  const [openCollapsible, setOpenCollapsible] = useState<string | null>(null);
-  const { location } = useRouterState();
+export function NavGroup({ routes }: { routes: SidebarRoute[] }) {
+  const { state } = useSidebar()
+  const isCollapsed = state === "collapsed"
+  const [openCollapsible, setOpenCollapsible] = useState<string | null>(null)
+  const { location } = useRouterState()
 
   return (
     <SidebarMenu>
       {routes.map((route) => {
-        const isOpen = !isCollapsed && openCollapsible === route.id;
-        const hasSubRoutes = !!route.subs?.length;
+        const isOpen = !isCollapsed && openCollapsible === route.id
+        const hasSubRoutes = !!route.subs?.length
         const isActive =
           route.link === "/"
             ? location.pathname === "/"
-            : location.pathname.startsWith(route.link);
+            : location.pathname.startsWith(route.link)
 
         return (
           <SidebarMenuItem key={route.id}>
@@ -53,7 +53,7 @@ export default function DashboardNavigation({ routes }: { routes: SidebarRoute[]
                         "flex w-full items-center rounded-lg px-2 transition-colors group-data-[layout=collapsed]:justify-center",
                         isOpen || isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent-hover"
-                          : "text-muted-foreground hover:text-sidebar-hover-foreground",
+                          : "text-muted-foreground hover:text-sidebar-hover-foreground"
                       )}
                     />
                   }
@@ -102,7 +102,7 @@ export default function DashboardNavigation({ routes }: { routes: SidebarRoute[]
                   "flex items-center rounded-lg px-2 transition-colors group-data-[layout=collapsed]:justify-center",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent-hover"
-                    : "text-muted-foreground hover:text-sidebar-hover-foreground",
+                    : "text-muted-foreground hover:text-sidebar-hover-foreground"
                 )}
                 render={<Link to={route.link as "/"} />}
               >
@@ -113,8 +113,8 @@ export default function DashboardNavigation({ routes }: { routes: SidebarRoute[]
               </SidebarMenuButton>
             )}
           </SidebarMenuItem>
-        );
+        )
       })}
     </SidebarMenu>
-  );
+  )
 }

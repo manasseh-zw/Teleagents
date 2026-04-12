@@ -20,7 +20,7 @@ export type SidebarRoute = {
   }[]
 }
 
-export const navRoutes: SidebarRoute[] = [
+export const mainNavLinks: SidebarRoute[] = [
   {
     id: "dashboard",
     title: "Dashboard",
@@ -47,7 +47,7 @@ export const navRoutes: SidebarRoute[] = [
   },
 ]
 
-export const navSecondaryRoutes: SidebarRoute[] = [
+export const secondaryNavLinks: SidebarRoute[] = [
   {
     id: "support",
     title: "Support",
@@ -62,7 +62,7 @@ export const navSecondaryRoutes: SidebarRoute[] = [
   },
 ]
 
-export const allNavRoutes: SidebarRoute[] = [
-  ...navRoutes,
-  ...navSecondaryRoutes,
+export const allNavLinks: SidebarRoute[] = [
+  ...mainNavLinks,
+  ...secondaryNavLinks,
 ]

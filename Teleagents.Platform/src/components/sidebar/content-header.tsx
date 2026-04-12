@@ -1,12 +1,12 @@
 "use client"
 
 import { OrganizationUsageIndicator } from "@/components/organization-usage-indicator"
-import { allNavRoutes } from "@/components/sidebar/navigation"
+import { allNavLinks } from "@/components/sidebar/nav-links"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useRouterState } from "@tanstack/react-router"
 
 function getRouteTitle(pathname: string) {
-  const activeRoute = [...allNavRoutes]
+  const activeRoute = [...allNavLinks]
     .sort((routeA, routeB) => routeB.link.length - routeA.link.length)
     .find((route) =>
       route.link === "/" ? pathname === "/" : pathname.startsWith(route.link)

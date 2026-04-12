@@ -1,5 +1,6 @@
 "use client"
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,7 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -28,7 +28,7 @@ export type UserAccountIndicatorProps = {
 function initialsFromName(name: string) {
   const parts = name.trim().split(/\s+/)
   if (parts.length >= 2) {
-    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase()
+    return `${parts[0][0] ?? ""}${parts[1][0] ?? ""}`.toUpperCase()
   }
   return name.slice(0, 2).toUpperCase() || "?"
 }
@@ -43,7 +43,7 @@ export function UserAccountIndicator({
 
   return (
     <SidebarMenu>
-      <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
+      <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[layout=collapsed]:justify-center">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -51,16 +51,14 @@ export function UserAccountIndicator({
                 size="lg"
                 tooltip={name}
                 className={cn(
-                  "data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground",
-                  "group-data-[collapsible=icon]:h-9! group-data-[collapsible=icon]:w-9! group-data-[collapsible=icon]:min-w-9! group-data-[collapsible=icon]:max-w-9! group-data-[collapsible=icon]:shrink-0 group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center!",
+                  "data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground",
+                  "group-data-[collapsible=icon]:h-9! group-data-[collapsible=icon]:w-9! group-data-[collapsible=icon]:max-w-9! group-data-[collapsible=icon]:min-w-9! group-data-[collapsible=icon]:shrink-0 group-data-[layout=collapsed]:justify-center! group-data-[collapsible=icon]:rounded-full! group-data-[collapsible=icon]:p-0!"
                 )}
               />
             }
           >
             <Avatar className="size-8 shrink-0">
-              {avatarSrc ? (
-                <AvatarImage src={avatarSrc} alt="" />
-              ) : null}
+              {avatarSrc ? <AvatarImage src={avatarSrc} alt="" /> : null}
               <AvatarFallback className="text-xs">
                 {initialsFromName(name)}
               </AvatarFallback>
@@ -82,7 +80,7 @@ export function UserAccountIndicator({
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">{name}</span>
-                <span className="text-muted-foreground text-xs font-normal">
+                <span className="text-xs font-normal text-muted-foreground">
                   {email}
                 </span>
               </div>

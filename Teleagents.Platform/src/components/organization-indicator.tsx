@@ -30,7 +30,7 @@ export function OrganizationIndicator({
           data-size="lg"
           className={cn(
             "peer/menu-button group/menu-button flex h-11 w-full cursor-default items-center gap-3 overflow-hidden rounded-sm p-1 text-left text-sm text-sidebar-foreground outline-hidden",
-            "group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:h-auto! group-data-[collapsible=icon]:min-h-0! group-data-[collapsible=icon]:w-full! group-data-[collapsible=icon]:justify-center! group-data-[collapsible=icon]:gap-0! group-data-[collapsible=icon]:p-0!",
+            "group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:h-auto! group-data-[collapsible=icon]:min-h-0! group-data-[collapsible=icon]:w-full! group-data-[layout=collapsed]:justify-center! group-data-[collapsible=icon]:gap-0! group-data-[collapsible=icon]:p-0!",
             className
           )}
         >
