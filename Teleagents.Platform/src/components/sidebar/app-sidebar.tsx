@@ -4,15 +4,11 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar"
-import { Logo } from "@/components/sidebar/logo"
+
+import { OrganizationIndicator } from "@/components/organization-indicator"
 import DashboardNavigation from "@/components/sidebar/nav-main"
 import { navRoutes } from "@/components/sidebar/navigation"
-import { TeamSwitcher } from "@/components/sidebar/team-switcher"
-
-const teams = [
-  { id: "1", name: "Alpha Inc.", logo: Logo, plan: "Free" },
-  { id: "2", name: "Beta Corp.", logo: Logo, plan: "Free" },
-]
+import { Logo } from "../logo"
 
 export function DashboardSidebar() {
   return (
@@ -20,11 +16,11 @@ export function DashboardSidebar() {
       <SidebarHeader className="px-3 md:pt-3.5">
         <a
           href="/"
-          className="flex items-center gap-2 group-data-[layout=collapsed]:justify-center"
+          className="flex items-center gap-[2px] group-data-[layout=collapsed]:justify-center"
         >
-          <Logo className="h-8 w-8 shrink-0" />
-          <span className="font-semibold text-black group-data-[collapsible=icon]:hidden dark:text-white">
-            Acme
+          <Logo className="h-7 w-7 shrink-0" />
+          <span className="font-logo text-xl font-normal tracking-tight text-black group-data-[collapsible=icon]:hidden dark:text-white">
+            Teleagents
           </span>
         </a>
       </SidebarHeader>
@@ -32,7 +28,12 @@ export function DashboardSidebar() {
         <DashboardNavigation routes={navRoutes} />
       </SidebarContent>
       <SidebarFooter className="px-3">
-        <TeamSwitcher teams={teams} />
+        <OrganizationIndicator
+          name="CBZ Holdings"
+          memberCount={1}
+          logoSrc="/cbz-logo.webp"
+          logoAlt="CBZ"
+        />
       </SidebarFooter>
     </Sidebar>
   )
