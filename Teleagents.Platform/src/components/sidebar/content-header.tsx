@@ -1,7 +1,6 @@
-"use client"
-
 import { OrganizationUsageIndicator } from "@/components/organization-usage-indicator"
 import { allNavLinks } from "@/components/sidebar/nav-links"
+import { AppThemeSwitcher } from "@/components/theme-switcher"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useRouterState } from "@tanstack/react-router"
 
@@ -40,6 +39,7 @@ export function ContentHeader() {
         <p className="truncate text-sm font-medium">{routeTitle}</p>
       </div>
       <OrganizationUsageIndicator used={1200} cap={3600} label="Used" />
+      <AppThemeSwitcher />
     </header>
   )
 }

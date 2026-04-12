@@ -1,7 +1,9 @@
 import { DashboardSidebar } from "@/components/sidebar/app-sidebar"
 import { ContentHeader } from "@/components/sidebar/content-header"
+import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { getThemeServerFn } from "@/lib/theme"
 import type { QueryClient } from "@tanstack/react-query"
 import { QueryClientProvider } from "@tanstack/react-query"
 import {
@@ -16,6 +18,7 @@ import appCss from "../styles.css?url"
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
+  loader: () => getThemeServerFn(),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -46,8 +49,14 @@ export const Route = createRootRouteWithContext<{
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const { resolved } = Route.useLoaderData()
+
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={resolved === "dark" ? "dark" : undefined}
+      suppressHydrationWarning
+    >
       <head>
         <HeadContent />
       </head>
@@ -61,22 +70,25 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 
 function RootApp() {
   const { queryClient } = Route.useRouteContext()
+  const themeData = Route.useLoaderData()
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <SidebarProvider>
-          <div className="relative flex h-dvh w-full">
-            <DashboardSidebar />
-            <SidebarInset className="flex flex-col overflow-hidden">
-              <ContentHeader />
-              <div className="flex-1 overflow-auto p-4 md:p-6">
-                <Outlet />
-              </div>
-            </SidebarInset>
-          </div>
-        </SidebarProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider data={themeData}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <SidebarProvider>
+            <div className="relative flex h-dvh w-full">
+              <DashboardSidebar />
+              <SidebarInset className="flex flex-col overflow-hidden">
+                <ContentHeader />
+                <div className="flex-1 overflow-auto p-4 md:p-6">
+                  <Outlet />
+                </div>
+              </SidebarInset>
+            </div>
+          </SidebarProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   )
 }

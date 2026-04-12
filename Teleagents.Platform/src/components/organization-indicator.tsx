@@ -30,11 +30,11 @@ export function OrganizationIndicator({
           data-size="lg"
           className={cn(
             "peer/menu-button group/menu-button flex h-11 w-full cursor-default items-center gap-3 overflow-hidden rounded-sm p-1 text-left text-sm text-sidebar-foreground outline-hidden",
-            "group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:h-auto! group-data-[collapsible=icon]:min-h-0! group-data-[collapsible=icon]:w-full! group-data-[layout=collapsed]:justify-center! group-data-[collapsible=icon]:gap-0! group-data-[collapsible=icon]:p-0!",
+            "group-data-[collapsible=icon]:flex! group-data-[collapsible=icon]:h-auto! group-data-[collapsible=icon]:min-h-0! group-data-[collapsible=icon]:w-full! group-data-[collapsible=icon]:gap-0! group-data-[collapsible=icon]:p-0! group-data-[layout=collapsed]:justify-center!",
             className
           )}
         >
-          <div className="relative size-8 shrink-0 overflow-hidden rounded-lg bg-background group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:shrink-0 group-data-[collapsible=icon]:rounded-lg">
+          <div className="relative size-8 shrink-0 overflow-hidden rounded-full bg-background group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:shrink-0 group-data-[collapsible=icon]:rounded-full dark:bg-sidebar-accent/30">
             <img
               src={logoSrc}
               alt={logoAlt ?? ""}

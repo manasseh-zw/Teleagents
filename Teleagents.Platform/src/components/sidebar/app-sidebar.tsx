@@ -21,10 +21,10 @@ export function DashboardSidebar() {
       <SidebarHeader className="space-y-3 px-4 pb-2 group-data-[layout=collapsed]:px-3 md:pt-3.5">
         <a
           href="/"
-          className="flex items-center gap-[2px] group-data-[layout=collapsed]:justify-center"
+          className="flex items-center gap-[2px] text-black group-data-[layout=collapsed]:justify-center dark:text-sidebar-foreground/88"
         >
-          <Logo className="h-7 w-7 shrink-0" />
-          <span className="font-logo text-xl font-normal tracking-tight text-black group-data-[collapsible=icon]:hidden dark:text-white">
+          <Logo className="h-7 w-7 shrink-0 text-current" />
+          <span className="font-logo text-xl font-normal tracking-tight text-current group-data-[collapsible=icon]:hidden">
             Teleagents
           </span>
         </a>

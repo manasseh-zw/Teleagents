@@ -50,10 +50,10 @@ export function NavGroup({ routes }: { routes: SidebarRoute[] }) {
                   render={
                     <SidebarMenuButton
                       className={cn(
-                        "flex w-full items-center rounded-lg px-2 transition-colors group-data-[layout=collapsed]:justify-center",
+                        "flex w-full items-center rounded-lg px-2 group-data-[layout=collapsed]:justify-center",
                         isOpen || isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent-hover"
-                          : "text-muted-foreground hover:text-sidebar-hover-foreground"
+                          : "text-muted-foreground transition-colors hover:text-sidebar-hover-foreground"
                       )}
                     />
                   }
@@ -99,10 +99,10 @@ export function NavGroup({ routes }: { routes: SidebarRoute[] }) {
               <SidebarMenuButton
                 tooltip={route.title}
                 className={cn(
-                  "flex items-center rounded-lg px-2 transition-colors group-data-[layout=collapsed]:justify-center",
+                  "flex items-center rounded-lg px-2 group-data-[layout=collapsed]:justify-center",
                   isActive
                     ? "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent-hover"
-                    : "text-muted-foreground hover:text-sidebar-hover-foreground"
+                    : "text-muted-foreground transition-colors hover:text-sidebar-hover-foreground"
                 )}
                 render={<Link to={route.link as "/"} />}
               >
