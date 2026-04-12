@@ -15,6 +15,8 @@ import { Route as OutboundRouteImport } from './routes/outbound'
 import { Route as CallHistoryRouteImport } from './routes/call-history'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CallHistoryConversationIdRouteImport } from './routes/call-history.$conversationId'
+import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
 
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
@@ -46,31 +48,48 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CallHistoryConversationIdRoute =
+  CallHistoryConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => CallHistoryRoute,
+  } as any)
+const AgentsAgentIdRoute = AgentsAgentIdRouteImport.update({
+  id: '/$agentId',
+  path: '/$agentId',
+  getParentRoute: () => AgentsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/agents': typeof AgentsRoute
-  '/call-history': typeof CallHistoryRoute
+  '/agents': typeof AgentsRouteWithChildren
+  '/call-history': typeof CallHistoryRouteWithChildren
   '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
+  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/call-history/$conversationId': typeof CallHistoryConversationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/agents': typeof AgentsRoute
-  '/call-history': typeof CallHistoryRoute
+  '/agents': typeof AgentsRouteWithChildren
+  '/call-history': typeof CallHistoryRouteWithChildren
   '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
+  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/call-history/$conversationId': typeof CallHistoryConversationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/agents': typeof AgentsRoute
-  '/call-history': typeof CallHistoryRoute
+  '/agents': typeof AgentsRouteWithChildren
+  '/call-history': typeof CallHistoryRouteWithChildren
   '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
+  '/agents/$agentId': typeof AgentsAgentIdRoute
+  '/call-history/$conversationId': typeof CallHistoryConversationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +100,18 @@ export interface FileRouteTypes {
     | '/outbound'
     | '/settings'
     | '/support'
+    | '/agents/$agentId'
+    | '/call-history/$conversationId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/call-history' | '/outbound' | '/settings' | '/support'
+  to:
+    | '/'
+    | '/agents'
+    | '/call-history'
+    | '/outbound'
+    | '/settings'
+    | '/support'
+    | '/agents/$agentId'
+    | '/call-history/$conversationId'
   id:
     | '__root__'
     | '/'
@@ -91,12 +120,14 @@ export interface FileRouteTypes {
     | '/outbound'
     | '/settings'
     | '/support'
+    | '/agents/$agentId'
+    | '/call-history/$conversationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AgentsRoute: typeof AgentsRoute
-  CallHistoryRoute: typeof CallHistoryRoute
+  AgentsRoute: typeof AgentsRouteWithChildren
+  CallHistoryRoute: typeof CallHistoryRouteWithChildren
   OutboundRoute: typeof OutboundRoute
   SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
@@ -146,13 +177,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/call-history/$conversationId': {
+      id: '/call-history/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/call-history/$conversationId'
+      preLoaderRoute: typeof CallHistoryConversationIdRouteImport
+      parentRoute: typeof CallHistoryRoute
+    }
+    '/agents/$agentId': {
+      id: '/agents/$agentId'
+      path: '/$agentId'
+      fullPath: '/agents/$agentId'
+      preLoaderRoute: typeof AgentsAgentIdRouteImport
+      parentRoute: typeof AgentsRoute
+    }
   }
 }
 
+interface AgentsRouteChildren {
+  AgentsAgentIdRoute: typeof AgentsAgentIdRoute
+}
+
+const AgentsRouteChildren: AgentsRouteChildren = {
+  AgentsAgentIdRoute: AgentsAgentIdRoute,
+}
+
+const AgentsRouteWithChildren =
+  AgentsRoute._addFileChildren(AgentsRouteChildren)
+
+interface CallHistoryRouteChildren {
+  CallHistoryConversationIdRoute: typeof CallHistoryConversationIdRoute
+}
+
+const CallHistoryRouteChildren: CallHistoryRouteChildren = {
+  CallHistoryConversationIdRoute: CallHistoryConversationIdRoute,
+}
+
+const CallHistoryRouteWithChildren = CallHistoryRoute._addFileChildren(
+  CallHistoryRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AgentsRoute: AgentsRoute,
-  CallHistoryRoute: CallHistoryRoute,
+  AgentsRoute: AgentsRouteWithChildren,
+  CallHistoryRoute: CallHistoryRouteWithChildren,
   OutboundRoute: OutboundRoute,
   SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,

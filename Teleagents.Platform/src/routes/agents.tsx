@@ -1,6 +1,6 @@
 import { useDeferredValue, useMemo, useState } from "react"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { AgentsTable } from "@/components/agents/agents-table"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/agents")({
 })
 
 function AgentsPage() {
+  const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const deferredSearch = useDeferredValue(search.trim())
   const queryInput = useMemo(
@@ -31,7 +32,7 @@ function AgentsPage() {
         Agents
       </h1>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full">
         <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -47,6 +48,12 @@ function AgentsPage() {
         isError={agentsQuery.isError}
         isLoading={agentsQuery.isLoading}
         search={deferredSearch}
+        onRowClick={(agent) => {
+          void navigate({
+            to: "/agents/$agentId",
+            params: { agentId: agent.id },
+          })
+        }}
       />
     </div>
   )

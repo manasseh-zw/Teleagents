@@ -6,10 +6,7 @@ import {
 } from "@/components/ui/sidebar"
 
 import { OrganizationIndicator } from "@/components/organization-indicator"
-import {
-  mainNavLinks,
-  secondaryNavLinks,
-} from "@/components/sidebar/nav-links"
+import { mainNavLinks, secondaryNavLinks } from "@/components/sidebar/nav-links"
 import { NavGroup } from "@/components/sidebar/nav-group"
 import { UserAccountIndicator } from "@/components/user-account-indicator"
 import { cn } from "@/lib/utils"
@@ -18,7 +15,7 @@ import { Logo } from "../logo"
 export function DashboardSidebar() {
   return (
     <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="space-y-3 px-4 pb-2 group-data-[layout=collapsed]:px-3 md:pt-3.5">
+      <SidebarHeader className="space-y-3 px-3 pb-2 md:pt-3.5">
         <a
           href="/"
           className="flex items-center gap-[2px] text-black group-data-[layout=collapsed]:justify-center dark:text-sidebar-foreground/88"
@@ -37,14 +34,9 @@ export function DashboardSidebar() {
           />
         </div>
       </SidebarHeader>
-      <SidebarContent className="flex min-h-0 flex-1 flex-col gap-0 px-4 py-4 group-data-[layout=collapsed]:px-3">
+      <SidebarContent className="flex min-h-0 flex-1 flex-col gap-0 px-3 py-4">
         <NavGroup routes={mainNavLinks} />
-        <div
-          className={cn(
-            "mt-auto flex min-h-0 flex-col gap-2 pt-4",
-            "group-data-[collapsible=icon]:pt-3"
-          )}
-        >
+        <div className={cn("mt-auto flex min-h-0 flex-col gap-2 pt-4")}>
           <NavGroup routes={secondaryNavLinks} />
         </div>
       </SidebarContent>

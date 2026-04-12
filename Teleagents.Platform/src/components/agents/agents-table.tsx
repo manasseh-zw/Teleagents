@@ -18,6 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  interactiveTableRowClassName,
+  tableBodyCellClassName,
+} from "@/lib/table-interactive-row"
 import type { AgentSummary } from "@/lib/types/agents"
 import { cn } from "@/lib/utils"
 
@@ -26,6 +30,7 @@ interface AgentsTableProps {
   isError?: boolean
   isLoading?: boolean
   search: string
+  onRowClick?: (agent: AgentSummary) => void
 }
 
 const columnHelper = createColumnHelper<AgentSummary>()
@@ -61,6 +66,7 @@ export function AgentsTable({
   isError = false,
   isLoading = false,
   search,
+  onRowClick,
 }: AgentsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -189,7 +195,7 @@ export function AgentsTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow
               key={headerGroup.id}
-              className="border-border hover:bg-transparent"
+              className="border-b border-border hover:bg-transparent"
             >
               {headerGroup.headers.map((header, index) => (
                 <TableHead
@@ -215,6 +221,15 @@ export function AgentsTable({
         </TableHeader>
 
         <TableBody>
+          <TableRow
+            aria-hidden
+            className="pointer-events-none border-0 hover:bg-transparent"
+          >
+            <TableCell
+              colSpan={columnCount}
+              className="h-4 border-0 bg-transparent p-0 hover:bg-transparent"
+            />
+          </TableRow>
           {isLoading ? (
             Array.from({ length: 6 }, (_, index) => (
               <TableRow
@@ -222,7 +237,7 @@ export function AgentsTable({
                 className="border-b border-border last:border-b-0 hover:bg-transparent"
               >
                 <TableCell colSpan={columnCount} className="px-0 py-0">
-                  <div className="grid grid-cols-5 gap-4 px-0 py-3">
+                  <div className="grid grid-cols-5 gap-4 px-2 py-3 md:px-3">
                     {Array.from({ length: columnCount }, (_, cellIndex) => (
                       <div
                         key={cellIndex}
@@ -244,7 +259,7 @@ export function AgentsTable({
             <TableRow className="border-b border-border hover:bg-transparent">
               <TableCell
                 colSpan={columnCount}
-                className="px-0 py-8 text-left text-sm text-muted-foreground"
+                className="px-2 py-8 text-left text-sm text-muted-foreground md:px-3"
               >
                 We couldn&apos;t load agents right now. Please try again.
               </TableCell>
@@ -253,7 +268,7 @@ export function AgentsTable({
             <TableRow className="border-b border-border hover:bg-transparent">
               <TableCell
                 colSpan={columnCount}
-                className="px-0 py-8 text-left text-sm text-muted-foreground"
+                className="px-2 py-8 text-left text-sm text-muted-foreground md:px-3"
               >
                 {search
                   ? `No agents found for "${search}".`
@@ -264,17 +279,38 @@ export function AgentsTable({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="border-b border-border last:border-b-0 hover:bg-transparent"
+                tabIndex={onRowClick ? 0 : undefined}
+                className={
+                  onRowClick
+                    ? interactiveTableRowClassName
+                    : "border-b border-border last:border-b-0 hover:bg-transparent"
+                }
+                aria-label={
+                  onRowClick
+                    ? `Open agent ${row.original.displayName}`
+                    : undefined
+                }
+                onClick={
+                  onRowClick ? () => onRowClick(row.original) : undefined
+                }
+                onKeyDown={
+                  onRowClick
+                    ? (event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault()
+                          onRowClick(row.original)
+                        }
+                      }
+                    : undefined
+                }
               >
                 {row.getVisibleCells().map((cell, index) => (
                   <TableCell
                     key={cell.id}
-                    className={cn(
-                      "px-3 py-2.5 align-middle",
-                      index === 0 ? "pl-0" : undefined,
-                      index === row.getVisibleCells().length - 1
-                        ? "pr-0"
-                        : undefined
+                    className={tableBodyCellClassName(
+                      index,
+                      row.getVisibleCells().length,
+                      { interactive: Boolean(onRowClick) }
                     )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
