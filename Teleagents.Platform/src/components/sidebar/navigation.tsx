@@ -1,6 +1,7 @@
 import {
   CircleUserRoundIcon,
   HomeIcon,
+  LifeBuoyIcon,
   ListIcon,
   PhoneOutgoingIcon,
   Settings,
@@ -44,10 +45,24 @@ export const navRoutes: SidebarRoute[] = [
     icon: <ListIcon className="size-[18px]" />,
     link: "/call-history",
   },
+]
+
+export const navSecondaryRoutes: SidebarRoute[] = [
+  {
+    id: "support",
+    title: "Support",
+    icon: <LifeBuoyIcon className="size-[18px]" />,
+    link: "/support",
+  },
   {
     id: "settings",
     title: "Settings",
     icon: <Settings className="size-[18px]" />,
     link: "/settings",
   },
+]
+
+export const allNavRoutes: SidebarRoute[] = [
+  ...navRoutes,
+  ...navSecondaryRoutes,
 ]

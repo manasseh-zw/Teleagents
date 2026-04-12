@@ -1,10 +1,12 @@
-import { navRoutes } from "@/components/sidebar/navigation"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+"use client"
+
+import { OrganizationUsageIndicator } from "@/components/organization-usage-indicator"
+import { allNavRoutes } from "@/components/sidebar/navigation"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useRouterState } from "@tanstack/react-router"
 
 function getRouteTitle(pathname: string) {
-  const activeRoute = [...navRoutes]
+  const activeRoute = [...allNavRoutes]
     .sort((routeA, routeB) => routeB.link.length - routeA.link.length)
     .find((route) =>
       route.link === "/" ? pathname === "/" : pathname.startsWith(route.link)
@@ -37,9 +39,7 @@ export function ContentHeader() {
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{routeTitle}</p>
       </div>
-      <Avatar>
-        <AvatarFallback>M</AvatarFallback>
-      </Avatar>
+      <OrganizationUsageIndicator used={1200} cap={3600} label="Used" />
     </header>
   )
 }

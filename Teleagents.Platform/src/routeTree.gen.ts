@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as OutboundRouteImport } from './routes/outbound'
 import { Route as CallHistoryRouteImport } from './routes/call-history'
 import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
 
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/call-history': typeof CallHistoryRoute
   '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/call-history': typeof CallHistoryRoute
   '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,27 @@ export interface FileRoutesById {
   '/call-history': typeof CallHistoryRoute
   '/outbound': typeof OutboundRoute
   '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agents' | '/call-history' | '/outbound' | '/settings'
+  fullPaths:
+    | '/'
+    | '/agents'
+    | '/call-history'
+    | '/outbound'
+    | '/settings'
+    | '/support'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agents' | '/call-history' | '/outbound' | '/settings'
-  id: '__root__' | '/' | '/agents' | '/call-history' | '/outbound' | '/settings'
+  to: '/' | '/agents' | '/call-history' | '/outbound' | '/settings' | '/support'
+  id:
+    | '__root__'
+    | '/'
+    | '/agents'
+    | '/call-history'
+    | '/outbound'
+    | '/settings'
+    | '/support'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,10 +99,18 @@ export interface RootRouteChildren {
   CallHistoryRoute: typeof CallHistoryRoute
   OutboundRoute: typeof OutboundRoute
   SettingsRoute: typeof SettingsRoute
+  SupportRoute: typeof SupportRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -125,6 +155,7 @@ const rootRouteChildren: RootRouteChildren = {
   CallHistoryRoute: CallHistoryRoute,
   OutboundRoute: OutboundRoute,
   SettingsRoute: SettingsRoute,
+  SupportRoute: SupportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
