@@ -8,6 +8,7 @@ export default [
   prettierConfig,
   {
     rules: {
+      "@typescript-eslint/array-type": "off",
       "import/order": "off",
       "sort-imports": "off",
       "import/newline-after-import": "off",
