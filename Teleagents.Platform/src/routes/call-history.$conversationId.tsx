@@ -3,10 +3,14 @@ import { CallHistoryDetailSheet } from "@/components/call-history/call-history-d
 import { callLogsService } from "@/lib/services/call-logs.service"
 
 export const Route = createFileRoute("/call-history/$conversationId")({
-  loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(
+  loader: ({ context, params }) => {
+    void context.queryClient.prefetchQuery(
       callLogsService.detailQueryOptions(params.conversationId)
-    ),
+    )
+    void context.queryClient.prefetchQuery(
+      callLogsService.audioMetadataQueryOptions(params.conversationId)
+    )
+  },
   component: CallConversationPage,
 })
 

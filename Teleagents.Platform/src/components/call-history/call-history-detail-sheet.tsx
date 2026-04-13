@@ -1,5 +1,10 @@
 import { useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
+import {
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,12 +14,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   AudioPlayerButton,
   AudioPlayerProvider,
@@ -30,8 +30,13 @@ import {
 } from "@/components/ui/conversation"
 import { MessageAvatar } from "@/components/ui/message"
 import { callLogsService } from "@/lib/services/call-logs.service"
-import type { CallLogDetail } from "@/lib/types/call-logs"
+import type {
+  CallLogDetail,
+  CallLogSummary,
+  PaginatedCallLogs,
+} from "@/lib/types/call-logs"
 import { cn } from "@/lib/utils"
+import { default as BoringAvatar } from "boring-avatars"
 
 function formatDuration(totalSeconds: number) {
   if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "—"
@@ -88,6 +93,44 @@ function statusBadgeConfig(call: CallLogDetail) {
   }
 }
 
+function createPreviewDetail(call: CallLogSummary): CallLogDetail {
+  return {
+    ...call,
+    hasAudio: false,
+    hasUserAudio: false,
+    hasResponseAudio: false,
+    transcript: [],
+  }
+}
+
+function findCachedCallSummary(
+  queryClient: ReturnType<typeof useQueryClient>,
+  conversationId: string
+) {
+  const queries = queryClient.getQueriesData<
+    InfiniteData<PaginatedCallLogs> | PaginatedCallLogs
+  >({
+    queryKey: callLogsService.queryKeys.lists(),
+  })
+
+  for (const [, data] of queries) {
+    if (!data) {
+      continue
+    }
+
+    const items =
+      "pages" in data ? data.pages.flatMap((page) => page.items) : data.items
+
+    const match = items.find((item) => item.conversationId === conversationId)
+
+    if (match) {
+      return match
+    }
+  }
+
+  return undefined
+}
+
 function AudioInitializer({ src, id }: { src: string; id: string }) {
   const player = useAudioPlayer()
   useEffect(() => {
@@ -96,22 +139,38 @@ function AudioInitializer({ src, id }: { src: string; id: string }) {
   return null
 }
 
-function AudioFallbackDuration({ fallbackSeconds }: { fallbackSeconds: number }) {
+function AudioFallbackDuration({
+  fallbackSeconds,
+}: {
+  fallbackSeconds: number
+}) {
   const player = useAudioPlayer()
   const { duration } = player
   const display =
-    duration !== undefined && Number.isFinite(duration) && !Number.isNaN(duration)
+    duration !== undefined &&
+    Number.isFinite(duration) &&
+    !Number.isNaN(duration)
       ? formatDuration(duration)
       : formatDuration(fallbackSeconds)
   return (
-    <span className="text-sm tabular-nums text-muted-foreground">{display}</span>
+    <span className="text-sm text-muted-foreground tabular-nums">
+      {display}
+    </span>
   )
 }
 
-function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
+function MetaRow({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
   return (
     <div className="flex items-start justify-between gap-6 border-b border-border/50 py-3.5 last:border-b-0">
-      <span className="shrink-0 text-sm font-medium text-foreground">{label}</span>
+      <span className="shrink-0 text-sm font-medium text-foreground">
+        {label}
+      </span>
       <div className="min-w-0 text-right text-sm">{children}</div>
     </div>
   )
@@ -165,7 +224,9 @@ function OverviewTab({
 
         {call.terminationReason ? (
           <MetaRow label="How the call ended">
-            <span className="text-muted-foreground">{call.terminationReason}</span>
+            <span className="text-muted-foreground">
+              {call.terminationReason}
+            </span>
           </MetaRow>
         ) : null}
 
@@ -194,11 +255,13 @@ function OverviewTab({
         ) : null}
 
         <MetaRow label="Date">
-          <span className="text-muted-foreground">{formatDate(call.startTimeUtc)}</span>
+          <span className="text-muted-foreground">
+            {formatDate(call.startTimeUtc)}
+          </span>
         </MetaRow>
 
         <MetaRow label="Conversation ID">
-          <span className="inline-block max-w-full break-all font-mono text-xs text-muted-foreground">
+          <span className="inline-block max-w-full font-mono text-xs break-all text-muted-foreground">
             {call.conversationId}
           </span>
         </MetaRow>
@@ -209,12 +272,7 @@ function OverviewTab({
 
 function isAssistantTranscriptRole(role: string) {
   const r = role.trim().toLowerCase()
-  return (
-    r === "agent" ||
-    r === "assistant" ||
-    r === "ai" ||
-    r === "bot"
-  )
+  return r === "agent" || r === "assistant" || r === "ai" || r === "bot"
 }
 
 function TranscriptionTab({
@@ -234,7 +292,9 @@ function TranscriptionTab({
             key={i}
             className={cn(
               "py-2",
-              i % 2 === 0 ? "flex w-full flex-col items-start gap-2" : "flex justify-end"
+              i % 2 === 0
+                ? "flex w-full flex-col items-start gap-2"
+                : "flex justify-end"
             )}
           >
             {i % 2 === 0 ? (
@@ -258,7 +318,7 @@ function TranscriptionTab({
 
   return (
     <Conversation className="h-full">
-      <ConversationContent className="flex flex-col gap-0 px-5 py-3">
+      <ConversationContent className="flex flex-col gap-0 px-7 py-3">
         {turns.length === 0 ? (
           <ConversationEmptyState
             title="No transcript"
@@ -274,10 +334,10 @@ function TranscriptionTab({
                   key={index}
                   className="flex w-full min-w-0 flex-col items-start gap-0 pt-1 pb-3"
                 >
-                  <div className="relative z-10 mb-1 flex max-w-[min(80%,28rem)] items-center gap-2 -translate-x-1">
-                    <MessageAvatar
+                  <div className="relative z-10 mb-1 flex max-w-[min(80%,28rem)] -translate-x-1 items-center gap-2">
+                    <BoringAvatar
                       name={agentLabel}
-                      className="size-7 shrink-0 ring-1"
+                      className="size-5 shrink-0"
                     />
                     <span className="truncate text-xs font-medium text-foreground">
                       {agentLabel}
@@ -290,7 +350,7 @@ function TranscriptionTab({
                   >
                     <p className="leading-relaxed">{turn.message}</p>
                     {turn.timeInCallSeconds != null ? (
-                      <p className="mt-2 text-[11px] tabular-nums text-muted-foreground">
+                      <p className="mt-2 text-[11px] text-muted-foreground tabular-nums">
                         {formatDuration(turn.timeInCallSeconds)}
                       </p>
                     ) : null}
@@ -311,7 +371,7 @@ function TranscriptionTab({
                 >
                   <p className="leading-relaxed">{turn.message}</p>
                   {turn.timeInCallSeconds != null ? (
-                    <p className="mt-2 text-right text-[11px] tabular-nums text-muted-foreground">
+                    <p className="mt-2 text-right text-[11px] text-muted-foreground tabular-nums">
                       {formatDuration(turn.timeInCallSeconds)}
                     </p>
                   ) : null}
@@ -337,9 +397,30 @@ export function CallHistoryDetailSheet({
   open,
   onClose,
 }: CallHistoryDetailSheetProps) {
-  const detailQuery = useQuery(callLogsService.detailQueryOptions(conversationId))
+  const queryClient = useQueryClient()
+  const previewCall = useMemo(
+    () => findCachedCallSummary(queryClient, conversationId),
+    [conversationId, queryClient]
+  )
+  const detailQuery = useQuery({
+    ...callLogsService.detailQueryOptions(conversationId),
+    placeholderData: previewCall ? createPreviewDetail(previewCall) : undefined,
+  })
   const call = detailQuery.data
+  const audioMetadataQuery = useQuery({
+    ...callLogsService.audioMetadataQueryOptions(conversationId),
+    enabled: open && Boolean(call?.hasAudio) && !detailQuery.isPlaceholderData,
+  })
   const audioSrc = `/api/audio/${conversationId}`
+  const isOverviewLoading = detailQuery.isLoading && !call
+  const isTranscriptionLoading =
+    detailQuery.isLoading || detailQuery.isPlaceholderData
+  const showAudioPlayer =
+    Boolean(call?.hasAudio) && !detailQuery.isPlaceholderData
+  const isAudioLoading =
+    showAudioPlayer &&
+    (audioMetadataQuery.isLoading || audioMetadataQuery.isFetching)
+  const audioFallbackSeconds = call?.durationSeconds ?? 0
 
   return (
     <Sheet
@@ -364,7 +445,7 @@ export function CallHistoryDetailSheet({
 
         {/* Header */}
         <div className="shrink-0 border-b border-border/60 px-6 py-6 pr-14">
-          <h2 className="text-base font-semibold leading-tight tracking-tight">
+          <h2 className="text-base leading-tight font-semibold tracking-tight">
             {call ? (
               <>
                 Conversation with{" "}
@@ -380,25 +461,29 @@ export function CallHistoryDetailSheet({
         </div>
 
         {/* Audio Player */}
-        {call?.hasAudio ? (
+        {showAudioPlayer ? (
           <div className="shrink-0 border-b border-border/60 px-6 py-5">
             <AudioPlayerProvider>
-              <AudioInitializer src={audioSrc} id={conversationId} />
+              {audioMetadataQuery.data?.hasAudio ? (
+                <AudioInitializer src={audioSrc} id={conversationId} />
+              ) : null}
               <div className="flex items-center gap-4">
                 <AudioPlayerButton
                   size="icon"
-                  variant="ghost"
-                  className="size-9 shrink-0 rounded-full text-foreground hover:bg-muted/80"
+                  variant="default"
+                  loading={isAudioLoading}
                 />
                 <AudioPlayerScrubBar
                   className="min-w-0 flex-1"
-                  fallbackDurationSeconds={call.durationSeconds}
+                  fallbackDurationSeconds={audioFallbackSeconds}
                   trackClassName="mx-1"
                 />
-                <div className="flex shrink-0 items-center gap-1.5 tabular-nums text-xs text-muted-foreground">
+                <div className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
                   <AudioPlayerTime className="text-xs" />
                   <span className="opacity-70">/</span>
-                  <AudioFallbackDuration fallbackSeconds={call.durationSeconds} />
+                  <AudioFallbackDuration
+                    fallbackSeconds={audioFallbackSeconds}
+                  />
                 </div>
               </div>
             </AudioPlayerProvider>
@@ -434,14 +519,14 @@ export function CallHistoryDetailSheet({
             value="overview"
             className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
           >
-            <OverviewTab call={call} isLoading={detailQuery.isLoading} />
+            <OverviewTab call={call} isLoading={isOverviewLoading} />
           </TabsContent>
 
           <TabsContent
             value="transcription"
             className="min-h-0 flex-1 overflow-hidden p-0"
           >
-            <TranscriptionTab call={call} isLoading={detailQuery.isLoading} />
+            <TranscriptionTab call={call} isLoading={isTranscriptionLoading} />
           </TabsContent>
         </Tabs>
       </SheetContent>

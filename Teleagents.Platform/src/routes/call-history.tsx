@@ -1,5 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { CallHistoryTable } from "@/components/call-history/call-history-table"
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/call-history")({
 
 function CallHistoryPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [search, setSearch] = useState("")
   const deferredSearch = useDeferredValue(search.trim())
 
@@ -63,6 +64,12 @@ function CallHistoryPage() {
         isLoading={callsQuery.isLoading && items.length === 0}
         search={deferredSearch}
         onRowClick={(call) => {
+          void queryClient.prefetchQuery(
+            callLogsService.detailQueryOptions(call.conversationId)
+          )
+          void queryClient.prefetchQuery(
+            callLogsService.audioMetadataQueryOptions(call.conversationId)
+          )
           void navigate({
             to: "/call-history/$conversationId",
             params: { conversationId: call.conversationId },

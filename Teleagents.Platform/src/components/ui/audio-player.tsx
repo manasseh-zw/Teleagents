@@ -71,6 +71,7 @@ interface AudioPlayerApi<TData = unknown> {
   error: MediaError | null
   isPlaying: boolean
   isBuffering: boolean
+  isSourceLoading: boolean
   playbackRate: number
   isItemActive: (id: string | number | null) => boolean
   setActiveItem: (item: AudioPlayerItem<TData> | null) => Promise<void>
@@ -238,6 +239,10 @@ export function AudioPlayerProvider<TData = unknown>({
   const isBuffering =
     readyState < ReadyState.HAVE_FUTURE_DATA &&
     networkState === NetworkState.NETWORK_LOADING
+  const isSourceLoading =
+    activeItem !== null &&
+    readyState < ReadyState.HAVE_METADATA &&
+    networkState === NetworkState.NETWORK_LOADING
 
   const api = useMemo<AudioPlayerApi<TData>>(
     () => ({
@@ -246,6 +251,7 @@ export function AudioPlayerProvider<TData = unknown>({
       error,
       isPlaying,
       isBuffering,
+      isSourceLoading,
       activeItem,
       playbackRate,
       isItemActive,
@@ -261,6 +267,7 @@ export function AudioPlayerProvider<TData = unknown>({
       error,
       isPlaying,
       isBuffering,
+      isSourceLoading,
       activeItem,
       playbackRate,
       isItemActive,
@@ -315,10 +322,7 @@ export function AudioPlayerScrubBar({
 
   const raw = player.duration
   const hasValidAudioDuration =
-    raw !== undefined &&
-    Number.isFinite(raw) &&
-    !Number.isNaN(raw) &&
-    raw > 0
+    raw !== undefined && Number.isFinite(raw) && !Number.isNaN(raw) && raw > 0
 
   const effectiveMax = hasValidAudioDuration
     ? raw
@@ -327,19 +331,18 @@ export function AudioPlayerScrubBar({
       : 0
 
   const disabled = effectiveMax <= 0
-  const clampedTime = disabled
-    ? 0
-    : Math.min(Math.max(0, time), effectiveMax)
+  const clampedTime = disabled ? 0 : Math.min(Math.max(0, time), effectiveMax)
   const displayTime =
     scrubTime == null
       ? clampedTime
       : Math.min(Math.max(0, scrubTime), effectiveMax)
-  const progressPercent = effectiveMax > 0 ? (displayTime / effectiveMax) * 100 : 0
+  const progressPercent =
+    effectiveMax > 0 ? (displayTime / effectiveMax) * 100 : 0
 
   if (disabled) {
     return (
       <div
-        className={cn("bg-muted/60 h-2 w-full rounded-full", className)}
+        className={cn("h-2 w-full rounded-full bg-muted/60", className)}
         aria-hidden
       />
     )
@@ -364,7 +367,7 @@ export function AudioPlayerScrubBar({
           void player.play()
         }
       }}
-      className={cn("min-w-0 w-full", className)}
+      className={cn("w-full min-w-0", className)}
       {...props}
     >
       <ScrubBarTrack
@@ -373,14 +376,14 @@ export function AudioPlayerScrubBar({
         <div
           aria-hidden
           className={cn(
-            "bg-foreground pointer-events-none absolute inset-y-0 left-0 rounded-full",
+            "pointer-events-none absolute inset-y-0 left-0 rounded-full bg-foreground",
             progressClassName
           )}
           style={{ width: `${progressPercent}%` }}
         />
         <ScrubBarThumb
           className={cn(
-            "bg-foreground h-3.5 w-3.5 ring-2 ring-background",
+            "h-3.5 w-3.5 bg-foreground ring-2 ring-background",
             thumbClassName
           )}
         />
@@ -400,10 +403,7 @@ export const AudioPlayerProgress = ({
 
   const raw = player.duration
   const hasValidAudioDuration =
-    raw !== undefined &&
-    Number.isFinite(raw) &&
-    !Number.isNaN(raw) &&
-    raw > 0
+    raw !== undefined && Number.isFinite(raw) && !Number.isNaN(raw) && raw > 0
 
   const effectiveMax = hasValidAudioDuration
     ? raw
@@ -412,9 +412,7 @@ export const AudioPlayerProgress = ({
       : 0
 
   const disabled = effectiveMax <= 0
-  const clampedTime = disabled
-    ? 0
-    : Math.min(Math.max(0, time), effectiveMax)
+  const clampedTime = disabled ? 0 : Math.min(Math.max(0, time), effectiveMax)
 
   return (
     <SliderPrimitive.Root
@@ -439,7 +437,7 @@ export const AudioPlayerProgress = ({
         otherProps.onPointerUp?.(e)
       }}
       className={cn(
-        "group/player relative flex h-4 touch-none items-center select-none data-disabled:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
+        "group/player relative flex h-4 touch-none items-center select-none data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col data-disabled:opacity-50",
         className
       )}
       onKeyDown={(e) => {
@@ -455,14 +453,14 @@ export const AudioPlayerProgress = ({
       }}
       disabled={disabled}
     >
-      <SliderPrimitive.Track className="bg-muted relative h-[4px] w-full grow overflow-hidden rounded-full">
-        <SliderPrimitive.Range className="bg-primary absolute h-full" />
+      <SliderPrimitive.Track className="relative h-[4px] w-full grow overflow-hidden rounded-full bg-muted">
+        <SliderPrimitive.Range className="absolute h-full bg-primary" />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb
         className="relative flex h-0 w-0 items-center justify-center opacity-0 group-hover/player:opacity-100 focus-visible:opacity-100 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
         data-slot="slider-thumb"
       >
-        <div className="bg-foreground absolute size-3 rounded-full" />
+        <div className="absolute size-3 rounded-full bg-foreground" />
       </SliderPrimitive.Thumb>
     </SliderPrimitive.Root>
   )
@@ -476,7 +474,7 @@ export const AudioPlayerTime = ({
   return (
     <span
       {...otherProps}
-      className={cn("text-muted-foreground text-sm tabular-nums", className)}
+      className={cn("text-sm text-muted-foreground tabular-nums", className)}
     >
       {formatTime(time)}
     </span>
@@ -491,7 +489,7 @@ export const AudioPlayerDuration = ({
   return (
     <span
       {...otherProps}
-      className={cn("text-muted-foreground text-sm tabular-nums", className)}
+      className={cn("text-sm text-muted-foreground tabular-nums", className)}
     >
       {player.duration !== null &&
       player.duration !== undefined &&
@@ -510,7 +508,7 @@ function Spinner({ className }: SpinnerProps) {
   return (
     <div
       className={cn(
-        "border-muted border-t-foreground size-3.5 animate-spin rounded-full border-2",
+        "size-3.5 animate-spin rounded-full border-2 border-muted border-t-foreground",
         className
       )}
       role="status"
@@ -566,21 +564,31 @@ const PlayButton = ({
   )
 }
 
-export interface AudioPlayerButtonProps<TData = unknown>
-  extends React.ComponentProps<typeof Button> {
+export interface AudioPlayerButtonProps<
+  TData = unknown,
+> extends React.ComponentProps<typeof Button> {
   item?: AudioPlayerItem<TData>
+  loading?: boolean
 }
 
 export function AudioPlayerButton<TData = unknown>({
   item,
+  loading = false,
   ...otherProps
 }: AudioPlayerButtonProps<TData>) {
   const player = useAudioPlayer<TData>()
+  const activeSourceLoading =
+    (!item && player.activeItem !== null) ||
+    (item ? player.isItemActive(item.id) : false)
+      ? player.isSourceLoading
+      : false
+  const showLoading = loading || activeSourceLoading
 
   if (!item) {
     return (
       <PlayButton
         {...otherProps}
+        disabled={otherProps.disabled || (showLoading && !player.isPlaying)}
         playing={player.isPlaying}
         onPlayingChange={(shouldPlay) => {
           if (shouldPlay) {
@@ -589,7 +597,7 @@ export function AudioPlayerButton<TData = unknown>({
             player.pause()
           }
         }}
-        loading={player.isBuffering && player.isPlaying}
+        loading={showLoading || (player.isBuffering && player.isPlaying)}
       />
     )
   }
@@ -597,6 +605,7 @@ export function AudioPlayerButton<TData = unknown>({
   return (
     <PlayButton
       {...otherProps}
+      disabled={otherProps.disabled || (showLoading && !player.isPlaying)}
       playing={player.isItemActive(item.id) && player.isPlaying}
       onPlayingChange={(shouldPlay) => {
         if (shouldPlay) {
@@ -606,7 +615,8 @@ export function AudioPlayerButton<TData = unknown>({
         }
       }}
       loading={
-        player.isItemActive(item.id) && player.isBuffering && player.isPlaying
+        showLoading ||
+        (player.isItemActive(item.id) && player.isBuffering && player.isPlaying)
       }
     />
   )
@@ -644,8 +654,9 @@ function useAnimationFrame(callback: Callback) {
 
 const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
 
-export interface AudioPlayerSpeedProps
-  extends React.ComponentProps<typeof Button> {
+export interface AudioPlayerSpeedProps extends React.ComponentProps<
+  typeof Button
+> {
   speeds?: readonly number[]
 }
 
@@ -661,7 +672,19 @@ export function AudioPlayerSpeed({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant={variant} size={size} className={cn(className)} aria-label="Playback speed" {...props} />}><Settings className="size-4" /></DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant={variant}
+            size={size}
+            className={cn(className)}
+            aria-label="Playback speed"
+            {...props}
+          />
+        }
+      >
+        <Settings className="size-4" />
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[120px]">
         {speeds.map((speed) => (
           <DropdownMenuItem
@@ -680,8 +703,10 @@ export function AudioPlayerSpeed({
   )
 }
 
-export interface AudioPlayerSpeedButtonGroupProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "children"> {
+export interface AudioPlayerSpeedButtonGroupProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "children"
+> {
   speeds?: readonly number[]
 }
 
