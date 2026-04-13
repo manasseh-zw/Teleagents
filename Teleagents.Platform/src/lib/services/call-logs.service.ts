@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import { apiRequest } from "@/lib/utils/api"
 import type {
@@ -52,6 +52,10 @@ function normalizeParams(params: GetCallLogsParams = {}) {
   return parseGetCallLogsParams(params)
 }
 
+function normalizePageParam(pageParam: unknown) {
+  return typeof pageParam === "string" && pageParam ? pageParam : undefined
+}
+
 export const callLogsService = {
   queryKeys: {
     all: () => ["call-logs"] as const,
@@ -89,6 +93,25 @@ export const callLogsService = {
     return queryOptions({
       queryKey: callLogsService.queryKeys.list(normalizedParams),
       queryFn: () => callLogsService.list(normalizedParams),
+    })
+  },
+
+  listInfiniteQueryOptions(params: GetCallLogsParams = {}) {
+    const normalizedParams = normalizeParams(params)
+
+    return infiniteQueryOptions({
+      queryKey: callLogsService.queryKeys.list(normalizedParams),
+      initialPageParam: "",
+      queryFn: ({ pageParam }) => {
+        const cursor = normalizePageParam(pageParam)
+
+        return callLogsService.list({
+          ...normalizedParams,
+          ...(cursor ? { cursor } : {}),
+        })
+      },
+      getNextPageParam: (lastPage) =>
+        lastPage.hasMore ? lastPage.nextCursor : undefined,
     })
   },
 

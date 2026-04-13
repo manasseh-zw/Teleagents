@@ -1,15 +1,18 @@
 import { useDeferredValue, useMemo, useState } from "react"
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { CallHistoryTable } from "@/components/call-history/call-history-table"
+import { InfiniteScrollTrigger } from "@/components/ui/infinite-scroll-trigger"
 import { Input } from "@/components/ui/input"
 import { callLogsService } from "@/lib/services/call-logs.service"
 
+const PAGE_SIZE = 15
+
 export const Route = createFileRoute("/call-history")({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(
-      callLogsService.listQueryOptions({ pageSize: 50 })
+    context.queryClient.ensureInfiniteQueryData(
+      callLogsService.listInfiniteQueryOptions({ pageSize: PAGE_SIZE })
     ),
   component: CallHistoryPage,
 })
@@ -19,14 +22,20 @@ function CallHistoryPage() {
   const [search, setSearch] = useState("")
   const deferredSearch = useDeferredValue(search.trim())
 
-  const callsQuery = useQuery({
-    ...callLogsService.listQueryOptions({ pageSize: 50 }),
-    placeholderData: keepPreviousData,
-  })
+  const queryInput = useMemo(
+    () => ({
+      pageSize: PAGE_SIZE,
+    }),
+    []
+  )
+
+  const callsQuery = useInfiniteQuery(
+    callLogsService.listInfiniteQueryOptions(queryInput)
+  )
 
   const items = useMemo(
-    () => callsQuery.data?.items ?? [],
-    [callsQuery.data?.items]
+    () => callsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [callsQuery.data?.pages]
   )
 
   return (
@@ -49,7 +58,7 @@ function CallHistoryPage() {
       <CallHistoryTable
         calls={items}
         isError={callsQuery.isError}
-        isLoading={callsQuery.isLoading}
+        isLoading={callsQuery.isLoading && items.length === 0}
         search={deferredSearch}
         onRowClick={(call) => {
           void navigate({
@@ -57,6 +66,12 @@ function CallHistoryPage() {
             params: { conversationId: call.conversationId },
           })
         }}
+      />
+
+      <InfiniteScrollTrigger
+        canLoadMore={Boolean(callsQuery.hasNextPage)}
+        isLoading={callsQuery.isFetchingNextPage}
+        onLoadMore={() => callsQuery.fetchNextPage()}
       />
     </div>
   )

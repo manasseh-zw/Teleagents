@@ -20,17 +20,23 @@ describe("agents.service", () => {
   it("resolves the agents list endpoint", async () => {
     mockedApiRequest.mockResolvedValue({
       items: [],
+      hasMore: false,
+      nextCursor: "",
     })
 
     await fetchAgentsFromApi({
       search: "sales",
       isActive: true,
+      cursor: "cursor-1",
+      pageSize: 25,
     })
 
     expect(mockedApiRequest).toHaveBeenCalledWith("/api/agents", {
       query: {
         search: "sales",
         isActive: true,
+        cursor: "cursor-1",
+        pageSize: 25,
       },
     })
   })

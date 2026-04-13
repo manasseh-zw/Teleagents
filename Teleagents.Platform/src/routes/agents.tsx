@@ -1,18 +1,21 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
+import { useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { AgentsTable } from "@/components/agents/agents-table"
+import { InfiniteScrollTrigger } from "@/components/ui/infinite-scroll-trigger"
 import { Input } from "@/components/ui/input"
-import { Spinner } from "@/components/ui/spinner"
 import { agentsService } from "@/lib/services/agents.service"
+import { createLogger } from "@/lib/utils/logger"
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 15
+const DEBUG_AGENTS_INFINITE_SCROLL = import.meta.env.DEV
+const logger = createLogger("agents-infinite")
 
 export const Route = createFileRoute("/agents")({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(
-      agentsService.listQueryOptions({ pageSize: PAGE_SIZE })
+    context.queryClient.ensureInfiniteQueryData(
+      agentsService.listInfiniteQueryOptions({ pageSize: PAGE_SIZE })
     ),
   component: AgentsPage,
 })
@@ -29,58 +32,33 @@ function AgentsPage() {
     [deferredSearch]
   )
 
-  const agentsQuery = useInfiniteQuery({
-    queryKey: agentsService.queryKeys.list(queryInput),
-    queryFn: ({ pageParam }) =>
-      agentsService.list({
-        ...queryInput,
-        ...(typeof pageParam === "string" && pageParam
-          ? { cursor: pageParam }
-          : {}),
-      }),
-    initialPageParam: "",
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.nextCursor : undefined,
-  })
+  const agentsQuery = useInfiniteQuery(agentsService.listInfiniteQueryOptions(queryInput))
 
   const agents = useMemo(
     () => agentsQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [agentsQuery.data?.pages]
   )
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-  const fetchingNextRef = useRef(false)
-
   useEffect(() => {
-    fetchingNextRef.current = false
-  }, [deferredSearch])
+    if (!DEBUG_AGENTS_INFINITE_SCROLL) {
+      return
+    }
 
-  useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0]
-        if (!entry?.isIntersecting) return
-        if (!agentsQuery.hasNextPage) return
-        if (agentsQuery.isFetchingNextPage) return
-        if (fetchingNextRef.current) return
-
-        fetchingNextRef.current = true
-        void agentsQuery.fetchNextPage().finally(() => {
-          fetchingNextRef.current = false
-        })
-      },
-      { rootMargin: "200px" }
-    )
-
-    observer.observe(el)
-    return () => observer.disconnect()
+    logger.info("query:state", {
+      pages: agentsQuery.data?.pages.length ?? 0,
+      items: agents.length,
+      hasNextPage: agentsQuery.hasNextPage,
+      isFetching: agentsQuery.isFetching,
+      isFetchingNextPage: agentsQuery.isFetchingNextPage,
+      search: deferredSearch,
+    })
   }, [
+    agents.length,
+    agentsQuery.data?.pages.length,
     agentsQuery.hasNextPage,
+    agentsQuery.isFetching,
     agentsQuery.isFetchingNextPage,
-    agentsQuery.fetchNextPage,
+    deferredSearch,
   ])
 
   return (
@@ -113,11 +91,11 @@ function AgentsPage() {
         }}
       />
 
-      <div ref={sentinelRef} className="flex h-10 items-center justify-center">
-        {agentsQuery.isFetchingNextPage ? (
-          <Spinner className="size-4 text-muted-foreground" />
-        ) : null}
-      </div>
+      <InfiniteScrollTrigger
+        canLoadMore={Boolean(agentsQuery.hasNextPage)}
+        isLoading={agentsQuery.isFetchingNextPage}
+        onLoadMore={() => agentsQuery.fetchNextPage()}
+      />
     </div>
   )
 }

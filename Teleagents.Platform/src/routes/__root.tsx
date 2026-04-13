@@ -1,6 +1,8 @@
+import { useRef } from "react"
 import { DashboardSidebar } from "@/components/sidebar/app-sidebar"
 import { ContentHeader } from "@/components/sidebar/content-header"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ScrollContainerProvider } from "@/components/ui/scroll-container-context"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { getThemeServerFn } from "@/lib/theme"
@@ -71,23 +73,29 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 function RootApp() {
   const { queryClient } = Route.useRouteContext()
   const themeData = Route.useLoaderData()
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   return (
     <ThemeProvider data={themeData}>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <SidebarProvider>
-            <div className="relative flex h-dvh w-full">
-              <DashboardSidebar />
-              <SidebarInset className="flex flex-col overflow-hidden">
-                <ContentHeader />
-                <div className="flex-1 overflow-auto p-4 md:p-6">
-                  <Outlet />
-                </div>
-              </SidebarInset>
-            </div>
-          </SidebarProvider>
-        </TooltipProvider>
+        <ScrollContainerProvider scrollContainerRef={scrollContainerRef}>
+          <TooltipProvider>
+            <SidebarProvider>
+              <div className="relative flex h-dvh w-full">
+                <DashboardSidebar />
+                <SidebarInset className="flex flex-col overflow-hidden">
+                  <ContentHeader />
+                  <div
+                    ref={scrollContainerRef}
+                    className="flex-1 overflow-auto p-4 md:p-6"
+                  >
+                    <Outlet />
+                  </div>
+                </SidebarInset>
+              </div>
+            </SidebarProvider>
+          </TooltipProvider>
+        </ScrollContainerProvider>
       </QueryClientProvider>
     </ThemeProvider>
   )

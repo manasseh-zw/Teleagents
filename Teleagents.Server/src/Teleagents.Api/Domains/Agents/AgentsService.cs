@@ -78,7 +78,7 @@ public class AgentsService : IAgentsService
         while (items.Count < pageSize)
         {
             var query = ApplyCursor(baseQuery, nextCursor)
-                .OrderBy(agent => agent.DisplayName)
+                .OrderBy(agent => agent.CreatedAt)
                 .ThenBy(agent => agent.Id)
                 .Take(ScanChunkSize);
 
@@ -123,7 +123,7 @@ public class AgentsService : IAgentsService
             }
 
             var last = chunk[^1];
-            nextCursor = new AgentCursor(last.DisplayName, last.Id);
+            nextCursor = new AgentCursor(last.CreatedAt, last.Id);
 
             if (chunk.Count < ScanChunkSize)
             {
@@ -131,17 +131,22 @@ public class AgentsService : IAgentsService
             }
         }
 
-        var hasMore = await HasMoreVisibleAgentsAsync(
+        var hasMoreResult = await HasMoreVisibleAgentsAsync(
             baseQuery,
             nextCursor,
             cancellationToken
         );
 
+        if (hasMoreResult.IsFailure)
+        {
+            return Result<GetAgentsResponse>.Failure(hasMoreResult.Errors);
+        }
+
         return Result<GetAgentsResponse>.Success(
             new GetAgentsResponse(
                 items,
-                hasMore,
-                hasMore && nextCursor is not null ? nextCursor.ToString() : string.Empty
+                hasMoreResult.Value!,
+                hasMoreResult.Value! && nextCursor is not null ? nextCursor.ToString() : string.Empty
             )
         );
     }
@@ -157,12 +162,12 @@ public class AgentsService : IAgentsService
         }
 
         return query.Where(agent =>
-            string.CompareOrdinal(agent.DisplayName, cursor.DisplayName) > 0
-            || (agent.DisplayName == cursor.DisplayName && agent.Id.CompareTo(cursor.Id) > 0)
+            agent.CreatedAt > cursor.CreatedAtUtc
+            || (agent.CreatedAt == cursor.CreatedAtUtc && agent.Id.CompareTo(cursor.Id) > 0)
         );
     }
 
-    private async Task<bool> HasMoreVisibleAgentsAsync(
+    private async Task<Result<bool>> HasMoreVisibleAgentsAsync(
         IQueryable<AgentModel> baseQuery,
         AgentCursor? cursor,
         CancellationToken cancellationToken
@@ -170,7 +175,7 @@ public class AgentsService : IAgentsService
     {
         if (cursor is null)
         {
-            return false;
+            return Result<bool>.Success(false);
         }
 
         var scanCursor = cursor;
@@ -178,14 +183,14 @@ public class AgentsService : IAgentsService
         for (var i = 0; i < 2; i++)
         {
             var chunk = await ApplyCursor(baseQuery, scanCursor)
-                .OrderBy(agent => agent.DisplayName)
+                .OrderBy(agent => agent.CreatedAt)
                 .ThenBy(agent => agent.Id)
                 .Take(ScanChunkSize)
                 .ToListAsync(cancellationToken);
 
             if (chunk.Count == 0)
             {
-                return false;
+                return Result<bool>.Success(false);
             }
 
             var providerResult = await _voiceProviderService.ListAgentsAsync(
@@ -199,7 +204,7 @@ public class AgentsService : IAgentsService
 
             if (providerResult.IsFailure)
             {
-                return false;
+                return Result<bool>.Failure(providerResult.Errors);
             }
 
             var providerAgents = providerResult.Value!.Items.ToDictionary(
@@ -209,22 +214,22 @@ public class AgentsService : IAgentsService
 
             if (chunk.Any(agent => providerAgents.ContainsKey(agent.ProviderAgentId)))
             {
-                return true;
+                return Result<bool>.Success(true);
             }
 
             var last = chunk[^1];
-            scanCursor = new AgentCursor(last.DisplayName, last.Id);
+            scanCursor = new AgentCursor(last.CreatedAt, last.Id);
 
             if (chunk.Count < ScanChunkSize)
             {
-                return false;
+                return Result<bool>.Success(false);
             }
         }
 
-        return true;
+        return Result<bool>.Success(true);
     }
 
-    private sealed record AgentCursor(string DisplayName, Guid Id)
+    private sealed record AgentCursor(DateTime CreatedAtUtc, Guid Id)
     {
         public static AgentCursor? TryParse(string input)
         {
@@ -243,8 +248,14 @@ public class AgentsService : IAgentsService
                     return null;
                 }
 
-                return Guid.TryParse(parts[1], out var id)
-                    ? new AgentCursor(parts[0], id)
+                return DateTime.TryParse(
+                        parts[0],
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.RoundtripKind,
+                        out var createdAtUtc
+                    )
+                    && Guid.TryParse(parts[1], out var id)
+                    ? new AgentCursor(createdAtUtc.ToUniversalTime(), id)
                     : null;
             }
             catch
@@ -255,7 +266,7 @@ public class AgentsService : IAgentsService
 
         public override string ToString()
         {
-            var text = $"{DisplayName}\n{Id:D}";
+            var text = $"{CreatedAtUtc:O}\n{Id:D}";
             return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(text));
         }
     }

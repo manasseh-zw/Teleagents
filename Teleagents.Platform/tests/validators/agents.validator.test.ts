@@ -7,10 +7,14 @@ describe("agents.validator", () => {
       parseGetAgentsParams({
         search: "  sales  ",
         isActive: true,
+        cursor: "  cursor-1  ",
+        pageSize: 25,
       })
     ).toEqual({
       search: "sales",
       isActive: true,
+      cursor: "cursor-1",
+      pageSize: 25,
     })
   })
 
