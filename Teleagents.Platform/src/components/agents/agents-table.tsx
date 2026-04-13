@@ -7,9 +7,17 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table"
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
+import { Link } from "@tanstack/react-router"
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  Search,
+  WifiOff,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 import {
   Table,
@@ -28,6 +36,7 @@ import { cn } from "@/lib/utils"
 
 interface AgentsTableProps {
   agents: AgentSummary[]
+  error?: unknown
   isError?: boolean
   isLoading?: boolean
   search: string
@@ -162,6 +171,7 @@ function AgentsTableLoadingRow({
 
 export function AgentsTable({
   agents,
+  error,
   isError = false,
   isLoading = false,
   search,
@@ -339,22 +349,39 @@ export function AgentsTable({
             ))
           ) : isError ? (
             <TableRow className="border-b border-border hover:bg-transparent">
-              <TableCell
-                colSpan={columnCount}
-                className="px-2.5 py-8 text-left text-sm text-muted-foreground"
-              >
-                We couldn&apos;t load agents right now. Please try again.
+              <TableCell colSpan={columnCount} className="px-2.5 py-6">
+                <EmptyState
+                  compact
+                  icon={<WifiOff className="size-8" />}
+                  title="Network error"
+                  description={
+                    error instanceof Error &&
+                    error.message.trim() &&
+                    !/fetch failed/i.test(error.message)
+                      ? error.message
+                      : "We couldn't reach the server to load agents right now."
+                  }
+                  action={
+                    <Button variant="outline" render={<Link to="/support" />}>
+                      Contact support
+                    </Button>
+                  }
+                />
               </TableCell>
             </TableRow>
           ) : hasNoResults ? (
             <TableRow className="border-b border-border hover:bg-transparent">
-              <TableCell
-                colSpan={columnCount}
-                className="px-2.5 py-8 text-left text-sm text-muted-foreground"
-              >
-                {search
-                  ? `No agents found for "${search}".`
-                  : "No agents are available yet."}
+              <TableCell colSpan={columnCount} className="px-2.5 py-6">
+                <EmptyState
+                  compact
+                  icon={<Search className="size-8" />}
+                  title={search ? "No results" : "No agents yet"}
+                  description={
+                    search
+                      ? `No agents were found for "${search}".`
+                      : "Agents will appear here once they become available."
+                  }
+                />
               </TableCell>
             </TableRow>
           ) : (

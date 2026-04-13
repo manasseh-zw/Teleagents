@@ -59,6 +59,7 @@ function AgentsPage() {
 
       <AgentsTable
         agents={agents}
+        error={agentsQuery.error}
         isError={agentsQuery.isError}
         isLoading={agentsQuery.isLoading && agents.length === 0}
         search={deferredSearch}

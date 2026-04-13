@@ -60,6 +60,7 @@ function CallHistoryPage() {
 
       <CallHistoryTable
         calls={items}
+        error={callsQuery.error}
         isError={callsQuery.isError}
         isLoading={callsQuery.isLoading && items.length === 0}
         search={deferredSearch}

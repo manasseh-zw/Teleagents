@@ -7,9 +7,17 @@ import {
   useReactTable,
   type SortingState,
 } from "@tanstack/react-table"
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
+import { Link } from "@tanstack/react-router"
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  Search,
+  WifiOff,
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 import {
   Table,
@@ -28,6 +36,7 @@ import { cn } from "@/lib/utils"
 
 interface CallHistoryTableProps {
   calls: CallLogSummary[]
+  error?: unknown
   isError?: boolean
   isLoading?: boolean
   search: string
@@ -205,6 +214,7 @@ function CallHistoryLoadingRow({
 
 export function CallHistoryTable({
   calls,
+  error,
   isError = false,
   isLoading = false,
   search,
@@ -402,22 +412,39 @@ export function CallHistoryTable({
             ))
           ) : isError ? (
             <TableRow className="border-b-0 hover:bg-transparent">
-              <TableCell
-                colSpan={columnCount}
-                className="px-2.5 py-8 text-left text-sm text-muted-foreground"
-              >
-                We couldn&apos;t load call history right now. Please try again.
+              <TableCell colSpan={columnCount} className="px-2.5 py-6">
+                <EmptyState
+                  compact
+                  icon={<WifiOff className="size-8" />}
+                  title="Network error"
+                  description={
+                    error instanceof Error &&
+                    error.message.trim() &&
+                    !/fetch failed/i.test(error.message)
+                      ? error.message
+                      : "We couldn't reach the server to load conversation history."
+                  }
+                  action={
+                    <Button variant="outline" render={<Link to="/support" />}>
+                      Contact support
+                    </Button>
+                  }
+                />
               </TableCell>
             </TableRow>
           ) : hasNoResults ? (
             <TableRow className="border-b-0 hover:bg-transparent">
-              <TableCell
-                colSpan={columnCount}
-                className="px-2.5 py-8 text-left text-sm text-muted-foreground"
-              >
-                {search.trim()
-                  ? `No calls found for "${search.trim()}".`
-                  : "No calls yet."}
+              <TableCell colSpan={columnCount} className="px-2.5 py-6">
+                <EmptyState
+                  compact
+                  icon={<Search className="size-8" />}
+                  title={search.trim() ? "No results" : "No conversations yet"}
+                  description={
+                    search.trim()
+                      ? "No conversations were found for the current search."
+                      : "Conversation history will appear here once calls are available."
+                  }
+                />
               </TableCell>
             </TableRow>
           ) : (

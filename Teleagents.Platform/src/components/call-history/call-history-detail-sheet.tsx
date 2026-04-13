@@ -28,7 +28,6 @@ import {
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ui/conversation"
-import { MessageAvatar } from "@/components/ui/message"
 import { callLogsService } from "@/lib/services/call-logs.service"
 import type {
   CallLogDetail,
