@@ -11,6 +11,11 @@ import { agentsService } from "@/lib/services/agents.service"
 const PAGE_SIZE = 15
 
 export const Route = createFileRoute("/agents")({
+  loader: ({ context }) => {
+    void context.queryClient.prefetchInfiniteQuery(
+      agentsService.listInfiniteQueryOptions({ pageSize: PAGE_SIZE })
+    )
+  },
   component: AgentsPage,
 })
 
