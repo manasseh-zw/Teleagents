@@ -17,6 +17,7 @@ import { Route as AgentsRouteImport } from './routes/agents'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CallHistoryConversationIdRouteImport } from './routes/call-history.$conversationId'
 import { Route as AgentsAgentIdRouteImport } from './routes/agents.$agentId'
+import { Route as ApiAudioConversationIdRouteImport } from './routes/api/audio.$conversationId'
 
 const SupportRoute = SupportRouteImport.update({
   id: '/support',
@@ -59,6 +60,11 @@ const AgentsAgentIdRoute = AgentsAgentIdRouteImport.update({
   path: '/$agentId',
   getParentRoute: () => AgentsRoute,
 } as any)
+const ApiAudioConversationIdRoute = ApiAudioConversationIdRouteImport.update({
+  id: '/api/audio/$conversationId',
+  path: '/api/audio/$conversationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/agents/$agentId': typeof AgentsAgentIdRoute
   '/call-history/$conversationId': typeof CallHistoryConversationIdRoute
+  '/api/audio/$conversationId': typeof ApiAudioConversationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/agents/$agentId': typeof AgentsAgentIdRoute
   '/call-history/$conversationId': typeof CallHistoryConversationIdRoute
+  '/api/audio/$conversationId': typeof ApiAudioConversationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/agents/$agentId': typeof AgentsAgentIdRoute
   '/call-history/$conversationId': typeof CallHistoryConversationIdRoute
+  '/api/audio/$conversationId': typeof ApiAudioConversationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/agents/$agentId'
     | '/call-history/$conversationId'
+    | '/api/audio/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/agents/$agentId'
     | '/call-history/$conversationId'
+    | '/api/audio/$conversationId'
   id:
     | '__root__'
     | '/'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/agents/$agentId'
     | '/call-history/$conversationId'
+    | '/api/audio/$conversationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   OutboundRoute: typeof OutboundRoute
   SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
+  ApiAudioConversationIdRoute: typeof ApiAudioConversationIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentsAgentIdRouteImport
       parentRoute: typeof AgentsRoute
     }
+    '/api/audio/$conversationId': {
+      id: '/api/audio/$conversationId'
+      path: '/api/audio/$conversationId'
+      fullPath: '/api/audio/$conversationId'
+      preLoaderRoute: typeof ApiAudioConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   OutboundRoute: OutboundRoute,
   SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,
+  ApiAudioConversationIdRoute: ApiAudioConversationIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

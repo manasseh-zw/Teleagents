@@ -1,6 +1,6 @@
 import { useDeferredValue, useMemo, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { CallHistoryTable } from "@/components/call-history/call-history-table"
 import { Button } from "@/components/ui/button"
@@ -87,6 +87,8 @@ function CallHistoryPage() {
           </Button>
         </div>
       ) : null}
+
+      <Outlet />
     </div>
   )
 }

@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { CallHistoryDetailSheet } from "@/components/call-history/call-history-detail-sheet"
 import { callLogsService } from "@/lib/services/call-logs.service"
 
 export const Route = createFileRoute("/call-history/$conversationId")({
@@ -11,13 +12,15 @@ export const Route = createFileRoute("/call-history/$conversationId")({
 
 function CallConversationPage() {
   const { conversationId } = Route.useParams()
+  const navigate = useNavigate()
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 pt-4 pb-2 md:px-8 md:pt-8">
-      <h1 className="text-2xl font-light tracking-tight text-foreground">
-        Conversation
-      </h1>
-      <p className="text-sm text-muted-foreground">{conversationId}</p>
-    </div>
+    <CallHistoryDetailSheet
+      conversationId={conversationId}
+      open
+      onClose={() => {
+        void navigate({ to: "/call-history" })
+      }}
+    />
   )
 }
