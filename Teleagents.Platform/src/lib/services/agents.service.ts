@@ -1,20 +1,16 @@
 import { queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
 import { apiRequest } from "@/lib/utils/api"
-import type { AgentDetail, AgentSummary, GetAgentsParams } from "@/lib/types/agents"
+import type { AgentDetail, GetAgentsParams, PaginatedAgentsResponse } from "@/lib/types/agents"
 import { parseAgentId, parseGetAgentsParams } from "@/lib/validators/agents.validator"
-
-interface AgentsResponsePayload {
-  items: AgentSummary[]
-}
 
 export async function fetchAgentsFromApi(params: GetAgentsParams = {}) {
   const normalizedParams = parseGetAgentsParams(params)
-  const response = (await apiRequest<AgentsResponsePayload>("/api/agents", {
+  const response = (await apiRequest<PaginatedAgentsResponse>("/api/agents", {
     query: normalizedParams,
-  })) as AgentsResponsePayload
+  })) as PaginatedAgentsResponse
 
-  return response.items
+  return response
 }
 
 export async function fetchAgentDetailFromApi(agentId: string) {

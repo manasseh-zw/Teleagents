@@ -4,9 +4,15 @@ public record GetAgentsRequest
 {
     public string Search { get; init; } = string.Empty;
     public bool? IsActive { get; init; }
+    public string Cursor { get; init; } = string.Empty;
+    public int PageSize { get; init; } = 10;
 }
 
-public record GetAgentsResponse(IReadOnlyList<GetAgentListItem> Items);
+public record GetAgentsResponse(
+    IReadOnlyList<GetAgentListItem> Items,
+    bool HasMore,
+    string NextCursor
+);
 
 public record GetAgentListItem(
     Guid Id,

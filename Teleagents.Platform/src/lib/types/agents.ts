@@ -3,6 +3,14 @@ export type AgentProvider = "ElevenLabs"
 export interface GetAgentsParams {
   search?: string
   isActive?: boolean
+  cursor?: string
+  pageSize?: number
+}
+
+export interface PaginatedAgentsResponse {
+  items: AgentSummary[]
+  hasMore: boolean
+  nextCursor: string
 }
 
 export interface AgentSummary {

@@ -24,6 +24,8 @@ public class AgentsService : IAgentsService
     private readonly RepositoryContext _repository;
     private readonly ICurrentTenantService _currentTenantService;
     private readonly IVoiceProviderService _voiceProviderService;
+    private const int MaxPageSize = 100;
+    private const int ScanChunkSize = 50;
 
     public AgentsService(
         RepositoryContext repository,
@@ -47,13 +49,13 @@ public class AgentsService : IAgentsService
             return Result<GetAgentsResponse>.Failure(tenantResult.Errors);
         }
 
-        var query = _repository
+        var baseQuery = _repository
             .Agents.AsNoTracking()
             .Where(agent => agent.TenantId == tenantResult.Value!.Id);
 
         if (request.IsActive.HasValue)
         {
-            query = query.Where(agent => agent.IsActive == request.IsActive.Value);
+            baseQuery = baseQuery.Where(agent => agent.IsActive == request.IsActive.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(request.Search))
@@ -61,43 +63,201 @@ public class AgentsService : IAgentsService
             var search = request.Search.Trim();
             var pattern = $"%{search}%";
 
-            query = query.Where(agent =>
+            baseQuery = baseQuery.Where(agent =>
                 EF.Functions.ILike(agent.DisplayName, pattern)
                 || EF.Functions.ILike(agent.Description, pattern)
             );
         }
 
-        var agents = await query.OrderBy(agent => agent.DisplayName).ToListAsync(cancellationToken);
+        var pageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, MaxPageSize);
+        var cursor = AgentCursor.TryParse(request.Cursor);
 
-        if (agents.Count == 0)
+        var items = new List<GetAgentListItem>(pageSize);
+        AgentCursor? nextCursor = cursor;
+
+        while (items.Count < pageSize)
         {
-            return Result<GetAgentsResponse>.Success(new GetAgentsResponse([]));
+            var query = ApplyCursor(baseQuery, nextCursor)
+                .OrderBy(agent => agent.DisplayName)
+                .ThenBy(agent => agent.Id)
+                .Take(ScanChunkSize);
+
+            var chunk = await query.ToListAsync(cancellationToken);
+            if (chunk.Count == 0)
+            {
+                nextCursor = null;
+                break;
+            }
+
+            var providerResult = await _voiceProviderService.ListAgentsAsync(
+                new VoiceProviderListAgentsRequest(
+                    ProviderAgentIds: chunk.Select(agent => agent.ProviderAgentId).ToArray(),
+                    IncludeArchived: false,
+                    PageSize: Math.Max(chunk.Count, 1)
+                ),
+                cancellationToken
+            );
+
+            if (providerResult.IsFailure)
+            {
+                return Result<GetAgentsResponse>.Failure(providerResult.Errors);
+            }
+
+            var providerAgents = providerResult.Value!.Items.ToDictionary(
+                agent => agent.ProviderAgentId,
+                StringComparer.Ordinal
+            );
+
+            foreach (var agent in chunk)
+            {
+                if (!providerAgents.TryGetValue(agent.ProviderAgentId, out var providerAgent))
+                {
+                    continue;
+                }
+
+                items.Add(MapAgentListItem(agent, providerAgent));
+                if (items.Count >= pageSize)
+                {
+                    break;
+                }
+            }
+
+            var last = chunk[^1];
+            nextCursor = new AgentCursor(last.DisplayName, last.Id);
+
+            if (chunk.Count < ScanChunkSize)
+            {
+                break;
+            }
         }
 
-        var providerResult = await _voiceProviderService.ListAgentsAsync(
-            new VoiceProviderListAgentsRequest(
-                ProviderAgentIds: agents.Select(agent => agent.ProviderAgentId).ToArray(),
-                PageSize: Math.Max(agents.Count, 1)
-            ),
+        var hasMore = await HasMoreVisibleAgentsAsync(
+            baseQuery,
+            nextCursor,
             cancellationToken
         );
 
-        if (providerResult.IsFailure)
+        return Result<GetAgentsResponse>.Success(
+            new GetAgentsResponse(
+                items,
+                hasMore,
+                hasMore && nextCursor is not null ? nextCursor.ToString() : string.Empty
+            )
+        );
+    }
+
+    private static IQueryable<AgentModel> ApplyCursor(
+        IQueryable<AgentModel> query,
+        AgentCursor? cursor
+    )
+    {
+        if (cursor is null)
         {
-            return Result<GetAgentsResponse>.Failure(providerResult.Errors);
+            return query;
         }
 
-        var providerAgents = providerResult.Value!.Items.ToDictionary(
-            agent => agent.ProviderAgentId,
-            StringComparer.Ordinal
+        return query.Where(agent =>
+            string.CompareOrdinal(agent.DisplayName, cursor.DisplayName) > 0
+            || (agent.DisplayName == cursor.DisplayName && agent.Id.CompareTo(cursor.Id) > 0)
         );
+    }
 
-        var items = agents
-            .Where(agent => providerAgents.ContainsKey(agent.ProviderAgentId))
-            .Select(agent => MapAgentListItem(agent, providerAgents[agent.ProviderAgentId]))
-            .ToArray();
+    private async Task<bool> HasMoreVisibleAgentsAsync(
+        IQueryable<AgentModel> baseQuery,
+        AgentCursor? cursor,
+        CancellationToken cancellationToken
+    )
+    {
+        if (cursor is null)
+        {
+            return false;
+        }
 
-        return Result<GetAgentsResponse>.Success(new GetAgentsResponse(items));
+        var scanCursor = cursor;
+
+        for (var i = 0; i < 2; i++)
+        {
+            var chunk = await ApplyCursor(baseQuery, scanCursor)
+                .OrderBy(agent => agent.DisplayName)
+                .ThenBy(agent => agent.Id)
+                .Take(ScanChunkSize)
+                .ToListAsync(cancellationToken);
+
+            if (chunk.Count == 0)
+            {
+                return false;
+            }
+
+            var providerResult = await _voiceProviderService.ListAgentsAsync(
+                new VoiceProviderListAgentsRequest(
+                    ProviderAgentIds: chunk.Select(agent => agent.ProviderAgentId).ToArray(),
+                    IncludeArchived: false,
+                    PageSize: Math.Max(chunk.Count, 1)
+                ),
+                cancellationToken
+            );
+
+            if (providerResult.IsFailure)
+            {
+                return false;
+            }
+
+            var providerAgents = providerResult.Value!.Items.ToDictionary(
+                agent => agent.ProviderAgentId,
+                StringComparer.Ordinal
+            );
+
+            if (chunk.Any(agent => providerAgents.ContainsKey(agent.ProviderAgentId)))
+            {
+                return true;
+            }
+
+            var last = chunk[^1];
+            scanCursor = new AgentCursor(last.DisplayName, last.Id);
+
+            if (chunk.Count < ScanChunkSize)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private sealed record AgentCursor(string DisplayName, Guid Id)
+    {
+        public static AgentCursor? TryParse(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return null;
+            }
+
+            try
+            {
+                var decoded = Convert.FromBase64String(input);
+                var text = System.Text.Encoding.UTF8.GetString(decoded);
+                var parts = text.Split('\n', 2, StringSplitOptions.None);
+                if (parts.Length != 2)
+                {
+                    return null;
+                }
+
+                return Guid.TryParse(parts[1], out var id)
+                    ? new AgentCursor(parts[0], id)
+                    : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public override string ToString()
+        {
+            var text = $"{DisplayName}\n{Id:D}";
+            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(text));
+        }
     }
 
     public async Task<Result<GetAgentResponse>> GetAgentAsync(

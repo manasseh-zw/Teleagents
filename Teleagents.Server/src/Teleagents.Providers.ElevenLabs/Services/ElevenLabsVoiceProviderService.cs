@@ -10,6 +10,7 @@ namespace Teleagents.Providers.ElevenLabs.Services;
 public class ElevenLabsVoiceProviderService : IVoiceProviderService
 {
     private readonly ElevenLabsApiClient _client;
+    private const int MaxAgentsPageSize = 100;
 
     public ElevenLabsVoiceProviderService(ElevenLabsApiClient client)
     {
@@ -23,37 +24,95 @@ public class ElevenLabsVoiceProviderService : IVoiceProviderService
         CancellationToken cancellationToken = default
     )
     {
-        var response = await _client.V1.Convai.Agents.GetAsync(
-            config =>
+        if (request.ProviderAgentIds is { Count: > 0 })
+        {
+            // ElevenLabs list endpoint does not support filtering by agent IDs.
+            // If the caller provides IDs, we page through the list and filter client-side
+            // until all requested IDs are found or we reach the end.
+            var wanted = request.ProviderAgentIds
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToHashSet(StringComparer.Ordinal);
+
+            var found = new Dictionary<string, VoiceProviderAgentListItem>(StringComparer.Ordinal);
+            var cursor = request.Cursor;
+
+            while (wanted.Count > 0)
             {
-                config.QueryParameters.Archived = request.IncludeArchived ? null : false;
-                config.QueryParameters.PageSize = request.PageSize;
-                config.QueryParameters.Cursor = NullIfEmpty(request.Cursor);
-                config.QueryParameters.Search = NullIfEmpty(request.Search);
-            },
-            cancellationToken
-        );
+                var response = await _client.V1.Convai.Agents.GetAsync(
+                    config =>
+                    {
+                        config.QueryParameters.Archived = request.IncludeArchived ? null : false;
+                        config.QueryParameters.PageSize = MaxAgentsPageSize;
+                        config.QueryParameters.Cursor = NullIfEmpty(cursor);
+                        config.QueryParameters.Search = NullIfEmpty(request.Search);
+                    },
+                    cancellationToken
+                );
 
-        var items =
-            response
-                ?.Agents?.Where(agent =>
-                    request.ProviderAgentIds is null
-                    || request.ProviderAgentIds.Count == 0
-                    || (
-                        !string.IsNullOrWhiteSpace(agent.AgentId)
-                        && request.ProviderAgentIds.Contains(agent.AgentId)
-                    )
+                var agents = response?.Agents ?? [];
+                foreach (var agent in agents)
+                {
+                    var agentId = agent?.AgentId;
+                    if (string.IsNullOrWhiteSpace(agentId) || !wanted.Contains(agentId))
+                    {
+                        continue;
+                    }
+
+                    found[agentId] = ElevenLabsVoiceProviderMapper.MapAgentListItem(agent);
+                    wanted.Remove(agentId);
+                }
+
+                if (wanted.Count == 0)
+                {
+                    break;
+                }
+
+                if (response?.HasMore != true)
+                {
+                    break;
+                }
+
+                cursor = ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor);
+                if (string.IsNullOrWhiteSpace(cursor))
+                {
+                    break;
+                }
+            }
+
+            return Result<VoiceProviderPagedResponse<VoiceProviderAgentListItem>>.Success(
+                new VoiceProviderPagedResponse<VoiceProviderAgentListItem>(
+                    found.Values.ToArray(),
+                    false,
+                    ""
                 )
-                .Select(ElevenLabsVoiceProviderMapper.MapAgentListItem)
-                .ToArray() ?? [];
+            );
+        }
 
-        return Result<VoiceProviderPagedResponse<VoiceProviderAgentListItem>>.Success(
-            new VoiceProviderPagedResponse<VoiceProviderAgentListItem>(
-                items,
-                response?.HasMore ?? false,
-                ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor)
-            )
-        );
+        {
+            var response = await _client.V1.Convai.Agents.GetAsync(
+                config =>
+                {
+                    config.QueryParameters.Archived = request.IncludeArchived ? null : false;
+                    config.QueryParameters.PageSize = request.PageSize;
+                    config.QueryParameters.Cursor = NullIfEmpty(request.Cursor);
+                    config.QueryParameters.Search = NullIfEmpty(request.Search);
+                },
+                cancellationToken
+            );
+
+            var items =
+                response
+                    ?.Agents?.Select(ElevenLabsVoiceProviderMapper.MapAgentListItem)
+                    .ToArray() ?? [];
+
+            return Result<VoiceProviderPagedResponse<VoiceProviderAgentListItem>>.Success(
+                new VoiceProviderPagedResponse<VoiceProviderAgentListItem>(
+                    items,
+                    response?.HasMore ?? false,
+                    ElevenLabsVoiceProviderMapper.GetNextCursorValue(response?.NextCursor)
+                )
+            );
+        }
     }
 
     public async Task<Result<VoiceProviderAgentDetailResponse>> GetAgentAsync(
