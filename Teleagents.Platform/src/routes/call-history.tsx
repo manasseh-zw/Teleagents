@@ -3,8 +3,9 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { CallHistoryTable } from "@/components/call-history/call-history-table"
-import { InfiniteScrollTrigger } from "@/components/ui/infinite-scroll-trigger"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { callLogsService } from "@/lib/services/call-logs.service"
 
 const PAGE_SIZE = 15
@@ -68,11 +69,24 @@ function CallHistoryPage() {
         }}
       />
 
-      <InfiniteScrollTrigger
-        canLoadMore={Boolean(callsQuery.hasNextPage)}
-        isLoading={callsQuery.isFetchingNextPage}
-        onLoadMore={() => callsQuery.fetchNextPage()}
-      />
+      {callsQuery.isFetchingNextPage ? (
+        <div className="flex min-h-10 items-center justify-center">
+          <Spinner className="size-4 text-muted-foreground" />
+        </div>
+      ) : callsQuery.hasNextPage ? (
+        <div className="flex min-h-10 items-center justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void callsQuery.fetchNextPage()
+            }}
+          >
+            Load more
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

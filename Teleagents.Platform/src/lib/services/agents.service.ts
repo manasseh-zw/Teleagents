@@ -1,12 +1,8 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 import { createServerFn } from "@tanstack/react-start"
-import { createLogger } from "@/lib/utils/logger"
 import { apiRequest } from "@/lib/utils/api"
 import type { AgentDetail, GetAgentsParams, PaginatedAgentsResponse } from "@/lib/types/agents"
 import { parseAgentId, parseGetAgentsParams } from "@/lib/validators/agents.validator"
-
-const DEBUG_AGENTS_INFINITE_SCROLL = import.meta.env.DEV
-const logger = createLogger("agents-infinite")
 
 export async function fetchAgentsFromApi(params: GetAgentsParams = {}) {
   const normalizedParams = parseGetAgentsParams(params)
@@ -79,29 +75,10 @@ export const agentsService = {
       initialPageParam: "",
       queryFn: async ({ pageParam }) => {
         const cursor = normalizePageParam(pageParam)
-        if (DEBUG_AGENTS_INFINITE_SCROLL) {
-          logger.info("request:start", {
-          cursor: cursor ?? "",
-          pageSize: normalizedParams.pageSize ?? null,
-          search: normalizedParams.search ?? "",
-          })
-        }
-
-        const response = await agentsService.list({
+        return agentsService.list({
           ...normalizedParams,
           ...(cursor ? { cursor } : {}),
         })
-
-        if (DEBUG_AGENTS_INFINITE_SCROLL) {
-          logger.info("request:success", {
-            cursor: cursor ?? "",
-            items: response.items.length,
-            hasMore: response.hasMore,
-            nextCursor: response.nextCursor,
-          })
-        }
-
-        return response
       },
       getNextPageParam: (lastPage) =>
         lastPage.hasMore ? lastPage.nextCursor : undefined,

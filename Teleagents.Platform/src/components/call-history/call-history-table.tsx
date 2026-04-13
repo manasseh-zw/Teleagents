@@ -139,36 +139,6 @@ export function CallHistoryTable({
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("startTimeUtc", {
-        header: ({ column }) => {
-          const SortIcon = getSortIcon(column.getIsSorted())
-          return (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="-ml-2 h-auto px-2 py-0 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:bg-transparent hover:text-foreground"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-            >
-              Date
-              <SortIcon className="size-3" />
-            </Button>
-          )
-        },
-        cell: ({ getValue }) => (
-          <span className="text-sm text-foreground tabular-nums">
-            {formatDate(getValue())}
-          </span>
-        ),
-        sortingFn: (rowA, rowB, columnId) => {
-          const a = rowA.getValue<string | null>(columnId)
-          const b = rowB.getValue<string | null>(columnId)
-          const ta = a ? new Date(a).getTime() : 0
-          const tb = b ? new Date(b).getTime() : 0
-          return ta === tb ? 0 : ta < tb ? -1 : 1
-        },
-      }),
       columnHelper.accessor("agentDisplayName", {
         header: () => (
           <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -231,6 +201,36 @@ export function CallHistoryTable({
               </Badge>
             </div>
           )
+        },
+      }),
+      columnHelper.accessor("startTimeUtc", {
+        header: ({ column }) => {
+          const SortIcon = getSortIcon(column.getIsSorted())
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-ml-2 h-auto px-2 py-0 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:bg-transparent hover:text-foreground"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Date
+              <SortIcon className="size-3" />
+            </Button>
+          )
+        },
+        cell: ({ getValue }) => (
+          <span className="text-sm text-foreground tabular-nums">
+            {formatDate(getValue())}
+          </span>
+        ),
+        sortingFn: (rowA, rowB, columnId) => {
+          const a = rowA.getValue<string | null>(columnId)
+          const b = rowB.getValue<string | null>(columnId)
+          const ta = a ? new Date(a).getTime() : 0
+          const tb = b ? new Date(b).getTime() : 0
+          return ta === tb ? 0 : ta < tb ? -1 : 1
         },
       }),
     ],

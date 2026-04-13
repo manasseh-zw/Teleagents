@@ -1,16 +1,14 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react"
+import { useDeferredValue, useMemo, useState } from "react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SearchIcon } from "lucide-react"
 import { AgentsTable } from "@/components/agents/agents-table"
-import { InfiniteScrollTrigger } from "@/components/ui/infinite-scroll-trigger"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { agentsService } from "@/lib/services/agents.service"
-import { createLogger } from "@/lib/utils/logger"
 
 const PAGE_SIZE = 15
-const DEBUG_AGENTS_INFINITE_SCROLL = import.meta.env.DEV
-const logger = createLogger("agents-infinite")
 
 export const Route = createFileRoute("/agents")({
   loader: ({ context }) =>
@@ -38,28 +36,6 @@ function AgentsPage() {
     () => agentsQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [agentsQuery.data?.pages]
   )
-
-  useEffect(() => {
-    if (!DEBUG_AGENTS_INFINITE_SCROLL) {
-      return
-    }
-
-    logger.info("query:state", {
-      pages: agentsQuery.data?.pages.length ?? 0,
-      items: agents.length,
-      hasNextPage: agentsQuery.hasNextPage,
-      isFetching: agentsQuery.isFetching,
-      isFetchingNextPage: agentsQuery.isFetchingNextPage,
-      search: deferredSearch,
-    })
-  }, [
-    agents.length,
-    agentsQuery.data?.pages.length,
-    agentsQuery.hasNextPage,
-    agentsQuery.isFetching,
-    agentsQuery.isFetchingNextPage,
-    deferredSearch,
-  ])
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-4 pb-2 md:px-8 md:pt-8">
@@ -91,11 +67,24 @@ function AgentsPage() {
         }}
       />
 
-      <InfiniteScrollTrigger
-        canLoadMore={Boolean(agentsQuery.hasNextPage)}
-        isLoading={agentsQuery.isFetchingNextPage}
-        onLoadMore={() => agentsQuery.fetchNextPage()}
-      />
+      {agentsQuery.isFetchingNextPage ? (
+        <div className="flex min-h-10 items-center justify-center">
+          <Spinner className="size-4 text-muted-foreground" />
+        </div>
+      ) : agentsQuery.hasNextPage ? (
+        <div className="flex min-h-10 items-center justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void agentsQuery.fetchNextPage()
+            }}
+          >
+            Load more
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }
