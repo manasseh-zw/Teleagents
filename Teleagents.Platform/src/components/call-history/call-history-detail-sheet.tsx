@@ -17,8 +17,8 @@ import {
 } from "@/components/ui/tabs"
 import {
   AudioPlayerButton,
-  AudioPlayerProgress,
   AudioPlayerProvider,
+  AudioPlayerScrubBar,
   AudioPlayerTime,
   useAudioPlayer,
 } from "@/components/ui/audio-player"
@@ -28,7 +28,7 @@ import {
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ui/conversation"
-import { Message, MessageAvatar, MessageContent } from "@/components/ui/message"
+import { MessageAvatar } from "@/components/ui/message"
 import { callLogsService } from "@/lib/services/call-logs.service"
 import type { CallLogDetail } from "@/lib/types/call-logs"
 import { cn } from "@/lib/utils"
@@ -110,9 +110,9 @@ function AudioFallbackDuration({ fallbackSeconds }: { fallbackSeconds: number })
 
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm">{children}</span>
+    <div className="flex items-start justify-between gap-6 border-b border-border/50 py-3.5 last:border-b-0">
+      <span className="shrink-0 text-sm font-medium text-foreground">{label}</span>
+      <div className="min-w-0 text-right text-sm">{children}</div>
     </div>
   )
 }
@@ -146,19 +146,17 @@ function OverviewTab({
   const { label, className } = statusBadgeConfig(call)
 
   return (
-    <div className="space-y-5 py-2">
+    <div className="space-y-6 py-1">
       {call.transcriptSummary?.trim() ? (
-        <div className="space-y-1.5">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Summary
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-foreground">Summary</p>
+          <p className="text-sm leading-relaxed text-foreground/90">
+            {call.transcriptSummary}
           </p>
-          <p className="text-sm leading-relaxed">{call.transcriptSummary}</p>
         </div>
       ) : null}
 
-      <Separator />
-
-      <div className="divide-y divide-border">
+      <div className="mt-2 space-y-0">
         <MetaRow label="Call status">
           <Badge variant="outline" className={cn("font-medium", className)}>
             {label}
@@ -171,24 +169,36 @@ function OverviewTab({
           </MetaRow>
         ) : null}
 
-        <MetaRow label="Duration">{formatDuration(call.durationSeconds)}</MetaRow>
+        <MetaRow label="Duration">
+          <span className="text-muted-foreground">
+            {formatDuration(call.durationSeconds)}
+          </span>
+        </MetaRow>
 
         <MetaRow label="Agent">
-          <span className="font-medium">{call.agentDisplayName || "—"}</span>
+          <span className="font-medium text-foreground">
+            {call.agentDisplayName || "—"}
+          </span>
         </MetaRow>
 
         {call.direction ? (
-          <MetaRow label="Direction">{call.direction}</MetaRow>
+          <MetaRow label="Direction">
+            <span className="text-muted-foreground">{call.direction}</span>
+          </MetaRow>
         ) : null}
 
         {call.mainLanguage ? (
-          <MetaRow label="Language">{call.mainLanguage}</MetaRow>
+          <MetaRow label="Language">
+            <span className="text-muted-foreground">{call.mainLanguage}</span>
+          </MetaRow>
         ) : null}
 
-        <MetaRow label="Date">{formatDate(call.startTimeUtc)}</MetaRow>
+        <MetaRow label="Date">
+          <span className="text-muted-foreground">{formatDate(call.startTimeUtc)}</span>
+        </MetaRow>
 
         <MetaRow label="Conversation ID">
-          <span className="font-mono text-xs text-muted-foreground">
+          <span className="inline-block max-w-full break-all font-mono text-xs text-muted-foreground">
             {call.conversationId}
           </span>
         </MetaRow>
@@ -218,19 +228,26 @@ function TranscriptionTab({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-1 p-4">
+      <div className="flex flex-col gap-1 px-5 py-3">
         {Array.from({ length: 6 }, (_, i) => (
           <div
             key={i}
             className={cn(
-              "flex gap-2 py-2",
-              i % 2 === 0 ? "flex-row" : "flex-row-reverse justify-end"
+              "py-2",
+              i % 2 === 0 ? "flex w-full flex-col items-start gap-2" : "flex justify-end"
             )}
           >
-            <Skeleton className="size-8 shrink-0 rounded-full" />
-            <Skeleton
-              className={cn("h-12 rounded-xl", i % 2 === 0 ? "w-2/3" : "w-3/5")}
-            />
+            {i % 2 === 0 ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="size-7 shrink-0 rounded-full" />
+                  <Skeleton className="h-3 w-28 rounded-full" />
+                </div>
+                <Skeleton className="h-14 w-[72%] max-w-md rounded-2xl" />
+              </>
+            ) : (
+              <Skeleton className="h-14 w-[68%] max-w-sm rounded-2xl" />
+            )}
           </div>
         ))}
       </div>
@@ -241,7 +258,7 @@ function TranscriptionTab({
 
   return (
     <Conversation className="h-full">
-      <ConversationContent className="flex flex-col gap-0 px-4 py-2">
+      <ConversationContent className="flex flex-col gap-0 px-5 py-3">
         {turns.length === 0 ? (
           <ConversationEmptyState
             title="No transcript"
@@ -249,27 +266,57 @@ function TranscriptionTab({
           />
         ) : (
           turns.map((turn, index) => {
-            const from = isAssistantTranscriptRole(turn.role)
-              ? "assistant"
-              : "user"
+            const isAgent = isAssistantTranscriptRole(turn.role)
+
+            if (isAgent) {
+              return (
+                <div
+                  key={index}
+                  className="flex w-full min-w-0 flex-col items-start gap-0 pt-1 pb-3"
+                >
+                  <div className="relative z-10 mb-1 flex max-w-[min(80%,28rem)] items-center gap-2 -translate-x-1">
+                    <MessageAvatar
+                      name={agentLabel}
+                      className="size-7 shrink-0 ring-1"
+                    />
+                    <span className="truncate text-xs font-medium text-foreground">
+                      {agentLabel}
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "max-w-[min(80%,28rem)] rounded-2xl bg-muted/35 px-5 py-3.5 text-sm text-foreground ring-1 ring-border/70"
+                    )}
+                  >
+                    <p className="leading-relaxed">{turn.message}</p>
+                    {turn.timeInCallSeconds != null ? (
+                      <p className="mt-2 text-[11px] tabular-nums text-muted-foreground">
+                        {formatDuration(turn.timeInCallSeconds)}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            }
 
             return (
-              <Message key={index} from={from} className="py-2">
-                <MessageAvatar
-                  name={from === "assistant" ? agentLabel : "You"}
-                />
-                <MessageContent
-                  variant={from === "assistant" ? "contained" : "flat"}
+              <div
+                key={index}
+                className="flex w-full min-w-0 justify-end pt-1 pb-3"
+              >
+                <div
+                  className={cn(
+                    "max-w-[min(80%,28rem)] rounded-2xl bg-muted/75 px-5 py-3.5 text-sm text-foreground"
+                  )}
                 >
                   <p className="leading-relaxed">{turn.message}</p>
-                  {turn.timeInCallSeconds !== null &&
-                  turn.timeInCallSeconds !== undefined ? (
-                    <p className="mt-0.5 text-[11px] tabular-nums opacity-60">
+                  {turn.timeInCallSeconds != null ? (
+                    <p className="mt-2 text-right text-[11px] tabular-nums text-muted-foreground">
                       {formatDuration(turn.timeInCallSeconds)}
                     </p>
                   ) : null}
-                </MessageContent>
-              </Message>
+                </div>
+              </div>
             )
           })
         )}
@@ -316,8 +363,8 @@ export function CallHistoryDetailSheet({
         </SheetDescription>
 
         {/* Header */}
-        <div className="shrink-0 border-b px-6 py-5 pr-14">
-          <h2 className="text-base font-semibold leading-tight">
+        <div className="shrink-0 border-b border-border/60 px-6 py-6 pr-14">
+          <h2 className="text-base font-semibold leading-tight tracking-tight">
             {call ? (
               <>
                 Conversation with{" "}
@@ -334,19 +381,23 @@ export function CallHistoryDetailSheet({
 
         {/* Audio Player */}
         {call?.hasAudio ? (
-          <div className="shrink-0 border-b px-6 py-4">
+          <div className="shrink-0 border-b border-border/60 px-6 py-5">
             <AudioPlayerProvider>
               <AudioInitializer src={audioSrc} id={conversationId} />
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <AudioPlayerButton
                   size="icon"
-                  variant="outline"
-                  className="size-8 shrink-0 rounded-full"
+                  variant="ghost"
+                  className="size-9 shrink-0 rounded-full text-foreground hover:bg-muted/80"
                 />
-                <AudioPlayerProgress className="flex-1" />
-                <div className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground">
-                  <AudioPlayerTime />
-                  <span>/</span>
+                <AudioPlayerScrubBar
+                  className="min-w-0 flex-1"
+                  fallbackDurationSeconds={call.durationSeconds}
+                  trackClassName="mx-1"
+                />
+                <div className="flex shrink-0 items-center gap-1.5 tabular-nums text-xs text-muted-foreground">
+                  <AudioPlayerTime className="text-xs" />
+                  <span className="opacity-70">/</span>
                   <AudioFallbackDuration fallbackSeconds={call.durationSeconds} />
                 </div>
               </div>
@@ -359,15 +410,21 @@ export function CallHistoryDetailSheet({
           defaultValue="overview"
           className="flex min-h-0 flex-1 flex-col gap-0"
         >
-          <div className="shrink-0 border-b">
+          <div className="shrink-0 border-b border-border/60 px-6 pt-6">
             <TabsList
               variant="line"
-              className="h-auto w-full rounded-none px-4 py-0"
+              className="h-auto w-fit min-w-0 justify-start gap-8 rounded-none bg-transparent p-0"
             >
-              <TabsTrigger value="overview" className="px-3 py-3 text-sm">
+              <TabsTrigger
+                value="overview"
+                className="flex-none grow-0 basis-auto px-0 py-2.5 text-xs font-medium text-muted-foreground data-active:text-foreground"
+              >
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="transcription" className="px-3 py-3 text-sm">
+              <TabsTrigger
+                value="transcription"
+                className="flex-none grow-0 basis-auto px-0 py-2.5 text-xs font-medium text-muted-foreground data-active:text-foreground"
+              >
                 Transcription
               </TabsTrigger>
             </TabsList>
@@ -375,7 +432,7 @@ export function CallHistoryDetailSheet({
 
           <TabsContent
             value="overview"
-            className="min-h-0 flex-1 overflow-y-auto px-6 py-4"
+            className="min-h-0 flex-1 overflow-y-auto px-6 py-6"
           >
             <OverviewTab call={call} isLoading={detailQuery.isLoading} />
           </TabsContent>

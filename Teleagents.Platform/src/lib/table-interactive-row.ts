@@ -10,10 +10,10 @@ export function tableBodyCellClassName(
 ) {
   const last = index === columnCount - 1
   return cn(
-    "px-3 align-middle",
-    options?.interactive ? "py-3.5" : "py-2.5",
-    index === 0 ? "pl-2 md:pl-3" : undefined,
-    last ? "pr-2 md:pr-3" : undefined,
+    "px-2.5 align-middle",
+    options?.interactive ? "py-3" : "py-2.5",
+    index === 0 ? "pl-2.5" : undefined,
+    last ? "pr-2.5" : undefined,
     last && options?.alignLastRight ? "text-right" : undefined
   )
 }

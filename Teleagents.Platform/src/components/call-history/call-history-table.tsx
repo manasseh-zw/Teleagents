@@ -188,9 +188,11 @@ export function CallHistoryTable({
       columnHelper.display({
         id: "callStatus",
         header: () => (
-          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Call status
-          </span>
+          <div className="flex w-full justify-end">
+            <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Call status
+            </span>
+          </div>
         ),
         cell: ({ row }) => {
           const { label, className } = statusBadge(row.original)
@@ -210,7 +212,7 @@ export function CallHistoryTable({
             <Button
               variant="ghost"
               size="sm"
-              className="-ml-2 h-auto px-2 py-0 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:bg-transparent hover:text-foreground"
+              className="ml-auto flex h-auto items-center justify-end gap-1 px-2 py-0 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:bg-transparent hover:text-foreground"
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
@@ -263,9 +265,11 @@ export function CallHistoryTable({
                 <TableHead
                   key={header.id}
                   className={cn(
-                    "h-10 px-3 py-2",
-                    index === 0 ? "pl-0" : undefined,
-                    index === headerGroup.headers.length - 1 ? "pr-0" : undefined
+                    "h-10 px-2.5 py-2",
+                    index === 0 ? "pl-2.5" : undefined,
+                    index === headerGroup.headers.length - 1
+                      ? "pr-2.5 text-right"
+                      : undefined
                   )}
                 >
                   {header.isPlaceholder
@@ -297,7 +301,7 @@ export function CallHistoryTable({
                 className="border-b-0 hover:bg-transparent"
               >
                 <TableCell colSpan={columnCount} className="px-0 py-0">
-                  <div className="grid grid-cols-5 gap-4 px-2 py-3 md:px-3">
+                  <div className="grid grid-cols-5 gap-4 px-2.5 py-2.5">
                     {Array.from({ length: columnCount }, (_, cellIndex) => (
                       <div
                         key={cellIndex}
@@ -319,7 +323,7 @@ export function CallHistoryTable({
             <TableRow className="border-b-0 hover:bg-transparent">
               <TableCell
                 colSpan={columnCount}
-                className="px-2 py-8 text-left text-sm text-muted-foreground md:px-3"
+                className="px-2.5 py-8 text-left text-sm text-muted-foreground"
               >
                 We couldn&apos;t load call history right now. Please try again.
               </TableCell>
@@ -328,7 +332,7 @@ export function CallHistoryTable({
             <TableRow className="border-b-0 hover:bg-transparent">
               <TableCell
                 colSpan={columnCount}
-                className="px-2 py-8 text-left text-sm text-muted-foreground md:px-3"
+                className="px-2.5 py-8 text-left text-sm text-muted-foreground"
               >
                 {search.trim()
                   ? `No calls found for "${search.trim()}".`

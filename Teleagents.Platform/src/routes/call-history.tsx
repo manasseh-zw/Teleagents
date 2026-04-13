@@ -42,7 +42,7 @@ function CallHistoryPage() {
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-4 pb-2 md:px-8 md:pt-8">
       <h1 className="text-2xl font-light tracking-tight text-foreground">
-        Call history
+        Call History
       </h1>
 
       <div className="relative w-full">

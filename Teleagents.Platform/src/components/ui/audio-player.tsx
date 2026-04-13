@@ -24,6 +24,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  ScrubBarContainer,
+  ScrubBarThumb,
+  ScrubBarTrack,
+} from "@/components/ui/scrub-bar"
 
 enum ReadyState {
   HAVE_NOTHING = 0,
@@ -277,26 +282,150 @@ export function AudioPlayerProvider<TData = unknown>({
   )
 }
 
-export const AudioPlayerProgress = ({
-  ...otherProps
-}: Omit<
+export type AudioPlayerProgressProps = Omit<
   ComponentProps<typeof SliderPrimitive.Root>,
   "min" | "max" | "value"
->) => {
+> & {
+  /** When streamed audio has no reliable duration (NaN/Infinity), use this for scrubbing */
+  fallbackDurationSeconds?: number
+}
+
+export type AudioPlayerScrubBarProps = Omit<
+  ComponentProps<typeof ScrubBarContainer>,
+  "children" | "duration" | "value" | "onScrub" | "onScrubStart" | "onScrubEnd"
+> & {
+  fallbackDurationSeconds?: number
+  trackClassName?: string
+  progressClassName?: string
+  thumbClassName?: string
+}
+
+export function AudioPlayerScrubBar({
+  fallbackDurationSeconds,
+  className,
+  trackClassName,
+  progressClassName,
+  thumbClassName,
+  ...props
+}: AudioPlayerScrubBarProps) {
+  const player = useAudioPlayer()
+  const time = useAudioPlayerTime()
+  const wasPlayingRef = useRef(false)
+  const [scrubTime, setScrubTime] = useState<number | null>(null)
+
+  const raw = player.duration
+  const hasValidAudioDuration =
+    raw !== undefined &&
+    Number.isFinite(raw) &&
+    !Number.isNaN(raw) &&
+    raw > 0
+
+  const effectiveMax = hasValidAudioDuration
+    ? raw
+    : fallbackDurationSeconds != null && fallbackDurationSeconds > 0
+      ? fallbackDurationSeconds
+      : 0
+
+  const disabled = effectiveMax <= 0
+  const clampedTime = disabled
+    ? 0
+    : Math.min(Math.max(0, time), effectiveMax)
+  const displayTime =
+    scrubTime == null
+      ? clampedTime
+      : Math.min(Math.max(0, scrubTime), effectiveMax)
+  const progressPercent = effectiveMax > 0 ? (displayTime / effectiveMax) * 100 : 0
+
+  if (disabled) {
+    return (
+      <div
+        className={cn("bg-muted/60 h-2 w-full rounded-full", className)}
+        aria-hidden
+      />
+    )
+  }
+
+  return (
+    <ScrubBarContainer
+      duration={effectiveMax}
+      value={displayTime}
+      onScrub={(nextTime) => {
+        setScrubTime(nextTime)
+        player.seek(nextTime)
+      }}
+      onScrubStart={() => {
+        wasPlayingRef.current = player.isPlaying
+        setScrubTime(clampedTime)
+        void player.pause()
+      }}
+      onScrubEnd={() => {
+        setScrubTime(null)
+        if (wasPlayingRef.current) {
+          void player.play()
+        }
+      }}
+      className={cn("min-w-0 w-full", className)}
+      {...props}
+    >
+      <ScrubBarTrack
+        className={cn("h-1.5 rounded-full bg-muted/80", trackClassName)}
+      >
+        <div
+          aria-hidden
+          className={cn(
+            "bg-foreground pointer-events-none absolute inset-y-0 left-0 rounded-full",
+            progressClassName
+          )}
+          style={{ width: `${progressPercent}%` }}
+        />
+        <ScrubBarThumb
+          className={cn(
+            "bg-foreground h-3.5 w-3.5 ring-2 ring-background",
+            thumbClassName
+          )}
+        />
+      </ScrubBarTrack>
+    </ScrubBarContainer>
+  )
+}
+
+export const AudioPlayerProgress = ({
+  fallbackDurationSeconds,
+  className,
+  ...otherProps
+}: AudioPlayerProgressProps) => {
   const player = useAudioPlayer()
   const time = useAudioPlayerTime()
   const wasPlayingRef = useRef(false)
 
+  const raw = player.duration
+  const hasValidAudioDuration =
+    raw !== undefined &&
+    Number.isFinite(raw) &&
+    !Number.isNaN(raw) &&
+    raw > 0
+
+  const effectiveMax = hasValidAudioDuration
+    ? raw
+    : fallbackDurationSeconds != null && fallbackDurationSeconds > 0
+      ? fallbackDurationSeconds
+      : 0
+
+  const disabled = effectiveMax <= 0
+  const clampedTime = disabled
+    ? 0
+    : Math.min(Math.max(0, time), effectiveMax)
+
   return (
     <SliderPrimitive.Root
       {...otherProps}
-      value={[time]}
+      value={[clampedTime]}
       onValueChange={(vals) => {
         player.seek(vals[0])
         otherProps.onValueChange?.(vals)
       }}
       min={0}
-      max={player.duration ?? 0}
+      max={effectiveMax}
       step={otherProps.step || 0.25}
       onPointerDown={(e) => {
         wasPlayingRef.current = player.isPlaying
@@ -310,8 +439,8 @@ export const AudioPlayerProgress = ({
         otherProps.onPointerUp?.(e)
       }}
       className={cn(
-        "group/player relative flex h-4 touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
-        otherProps.className
+        "group/player relative flex h-4 touch-none items-center select-none data-disabled:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
+        className
       )}
       onKeyDown={(e) => {
         if (e.key === " ") {
@@ -324,11 +453,7 @@ export const AudioPlayerProgress = ({
         }
         otherProps.onKeyDown?.(e)
       }}
-      disabled={
-        player.duration === undefined ||
-        !Number.isFinite(player.duration) ||
-        Number.isNaN(player.duration)
-      }
+      disabled={disabled}
     >
       <SliderPrimitive.Track className="bg-muted relative h-[4px] w-full grow overflow-hidden rounded-full">
         <SliderPrimitive.Range className="bg-primary absolute h-full" />
