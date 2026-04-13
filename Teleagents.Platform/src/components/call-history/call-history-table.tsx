@@ -10,6 +10,7 @@ import {
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -34,6 +35,57 @@ interface CallHistoryTableProps {
 }
 
 const columnHelper = createColumnHelper<CallLogSummary>()
+
+const loadingCalls: Array<{
+  agent: string
+  duration: string
+  summary: string
+  date: string
+  statusWidth: string
+}> = [
+  {
+    agent: "Customer Support Assistant",
+    duration: "8:34",
+    summary: "Caller asked about a missed payment and requested a callback.",
+    date: "Apr 12, 2026, 9:24 AM",
+    statusWidth: "w-24",
+  },
+  {
+    agent: "Collections Follow-Up Agent",
+    duration: "12:09",
+    summary: "Conversation covered verification steps and repayment options.",
+    date: "Apr 11, 2026, 2:18 PM",
+    statusWidth: "w-20",
+  },
+  {
+    agent: "Outbound Sales Concierge",
+    duration: "3:51",
+    summary: "Lead qualification call with product questions and next steps.",
+    date: "Apr 10, 2026, 11:07 AM",
+    statusWidth: "w-24",
+  },
+  {
+    agent: "Support Escalation Desk",
+    duration: "16:22",
+    summary: "Urgent issue triaged and passed to a live human operator.",
+    date: "Apr 9, 2026, 4:42 PM",
+    statusWidth: "w-[5.5rem]",
+  },
+  {
+    agent: "Renewals Assistant",
+    duration: "5:47",
+    summary: "Renewal preferences captured and confirmation sent to caller.",
+    date: "Apr 8, 2026, 8:03 AM",
+    statusWidth: "w-24",
+  },
+  {
+    agent: "Front Desk Triage Agent",
+    duration: "7:15",
+    summary: "General inquiry routed to the appropriate internal team.",
+    date: "Apr 7, 2026, 6:15 PM",
+    statusWidth: "w-20",
+  },
+]
 
 function formatDate(value: string | null) {
   if (!value) {
@@ -103,6 +155,52 @@ function statusBadge(log: CallLogSummary) {
     label: "Unknown",
     className: "border-border bg-muted text-muted-foreground",
   }
+}
+
+function CallHistoryLoadingRow({
+  index,
+  columnCount,
+}: {
+  index: number
+  columnCount: number
+}) {
+  const row = loadingCalls[index % loadingCalls.length]
+
+  return (
+    <TableRow aria-hidden className="border-b-0 hover:bg-transparent">
+      <TableCell className={tableBodyCellClassName(0, columnCount)}>
+        <SkeletonText className="block max-w-56 truncate text-sm sm:max-w-xs">
+          {row.agent}
+        </SkeletonText>
+      </TableCell>
+      <TableCell className={tableBodyCellClassName(1, columnCount)}>
+        <SkeletonText className="text-sm tabular-nums">
+          {row.duration}
+        </SkeletonText>
+      </TableCell>
+      <TableCell className={tableBodyCellClassName(2, columnCount)}>
+        <SkeletonText className="block max-w-[min(28rem,40vw)] truncate text-sm">
+          {row.summary}
+        </SkeletonText>
+      </TableCell>
+      <TableCell className={tableBodyCellClassName(3, columnCount)}>
+        <div className="flex justify-end">
+          <Skeleton className={cn("h-6 rounded-full", row.statusWidth)} />
+        </div>
+      </TableCell>
+      <TableCell
+        className={tableBodyCellClassName(4, columnCount, {
+          alignLastRight: true,
+        })}
+      >
+        <span className="inline-flex justify-end">
+          <SkeletonText className="text-sm tabular-nums">
+            {row.date}
+          </SkeletonText>
+        </span>
+      </TableCell>
+    </TableRow>
+  )
 }
 
 export function CallHistoryTable({
@@ -296,28 +394,11 @@ export function CallHistoryTable({
           </TableRow>
           {isLoading ? (
             Array.from({ length: 6 }, (_, index) => (
-              <TableRow
+              <CallHistoryLoadingRow
                 key={`loading-${index}`}
-                className="border-b-0 hover:bg-transparent"
-              >
-                <TableCell colSpan={columnCount} className="px-0 py-0">
-                  <div className="grid grid-cols-5 gap-4 px-2.5 py-2.5">
-                    {Array.from({ length: columnCount }, (_, cellIndex) => (
-                      <div
-                        key={cellIndex}
-                        className={cn(
-                          "h-3.5 rounded-full bg-muted/80",
-                          cellIndex === 0
-                            ? "w-36"
-                            : cellIndex === 1
-                              ? "w-28"
-                              : "w-20"
-                        )}
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-              </TableRow>
+                index={index}
+                columnCount={columnCount}
+              />
             ))
           ) : isError ? (
             <TableRow className="border-b-0 hover:bg-transparent">

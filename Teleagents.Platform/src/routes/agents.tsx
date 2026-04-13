@@ -11,10 +11,6 @@ import { agentsService } from "@/lib/services/agents.service"
 const PAGE_SIZE = 15
 
 export const Route = createFileRoute("/agents")({
-  loader: ({ context }) =>
-    context.queryClient.ensureInfiniteQueryData(
-      agentsService.listInfiniteQueryOptions({ pageSize: PAGE_SIZE })
-    ),
   component: AgentsPage,
 })
 
@@ -30,7 +26,9 @@ function AgentsPage() {
     [deferredSearch]
   )
 
-  const agentsQuery = useInfiniteQuery(agentsService.listInfiniteQueryOptions(queryInput))
+  const agentsQuery = useInfiniteQuery(
+    agentsService.listInfiniteQueryOptions(queryInput)
+  )
 
   const agents = useMemo(
     () => agentsQuery.data?.pages.flatMap((page) => page.items) ?? [],

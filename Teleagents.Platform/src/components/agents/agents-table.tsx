@@ -10,6 +10,7 @@ import {
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -35,6 +36,57 @@ interface AgentsTableProps {
 
 const columnHelper = createColumnHelper<AgentSummary>()
 
+const loadingAgents: Array<{
+  name: string
+  description: string
+  phoneNumber: string
+  lastCall: string
+  statusWidth: string
+}> = [
+  {
+    name: "Customer Support Assistant",
+    description: "Handles billing questions and account updates",
+    phoneNumber: "+263 77 124 5521",
+    lastCall: "Apr 12, 2026, 9:24 AM",
+    statusWidth: "w-16",
+  },
+  {
+    name: "Collections Follow-Up Agent",
+    description: "Schedules callbacks and verifies repayment plans",
+    phoneNumber: "+263 77 842 1903",
+    lastCall: "Apr 11, 2026, 2:18 PM",
+    statusWidth: "w-20",
+  },
+  {
+    name: "Outbound Sales Concierge",
+    description: "Qualifies leads for new product onboarding",
+    phoneNumber: "+263 71 409 8874",
+    lastCall: "Apr 10, 2026, 11:07 AM",
+    statusWidth: "w-[4.5rem]",
+  },
+  {
+    name: "Support Escalation Desk",
+    description: "Routes urgent service issues to human operators",
+    phoneNumber: "+263 78 219 6642",
+    lastCall: "Apr 9, 2026, 4:42 PM",
+    statusWidth: "w-16",
+  },
+  {
+    name: "Renewals Assistant",
+    description: "Confirms subscription renewals and plan changes",
+    phoneNumber: "+263 77 315 4428",
+    lastCall: "Apr 8, 2026, 8:03 AM",
+    statusWidth: "w-20",
+  },
+  {
+    name: "Front Desk Triage Agent",
+    description: "Captures caller intent and directs next actions",
+    phoneNumber: "+263 73 991 2250",
+    lastCall: "Apr 7, 2026, 6:15 PM",
+    statusWidth: "w-[4.5rem]",
+  },
+]
+
 function formatDate(value: string | null) {
   if (!value) {
     return "Never"
@@ -59,6 +111,53 @@ function getSortIcon(direction: false | "asc" | "desc") {
   }
 
   return ArrowUpDownIcon
+}
+
+function AgentsTableLoadingRow({
+  index,
+  columnCount,
+}: {
+  index: number
+  columnCount: number
+}) {
+  const row = loadingAgents[index % loadingAgents.length]
+
+  return (
+    <TableRow
+      aria-hidden
+      className="border-b border-border last:border-b-0 hover:bg-transparent"
+    >
+      <TableCell className={tableBodyCellClassName(0, columnCount)}>
+        <SkeletonText className="block max-w-48 truncate text-sm font-medium sm:max-w-56">
+          {row.name}
+        </SkeletonText>
+      </TableCell>
+      <TableCell className={tableBodyCellClassName(1, columnCount)}>
+        <SkeletonText className="block max-w-[min(24rem,35vw)] truncate text-sm">
+          {row.description}
+        </SkeletonText>
+      </TableCell>
+      <TableCell className={tableBodyCellClassName(2, columnCount)}>
+        <SkeletonText className="text-sm tabular-nums">
+          {row.phoneNumber}
+        </SkeletonText>
+      </TableCell>
+      <TableCell className={tableBodyCellClassName(3, columnCount)}>
+        <Skeleton className={cn("h-6 rounded-full", row.statusWidth)} />
+      </TableCell>
+      <TableCell
+        className={tableBodyCellClassName(4, columnCount, {
+          alignLastRight: true,
+        })}
+      >
+        <span className="inline-flex justify-end">
+          <SkeletonText className="text-sm tabular-nums">
+            {row.lastCall}
+          </SkeletonText>
+        </span>
+      </TableCell>
+    </TableRow>
+  )
 }
 
 export function AgentsTable({
@@ -232,28 +331,11 @@ export function AgentsTable({
           </TableRow>
           {isLoading ? (
             Array.from({ length: 6 }, (_, index) => (
-              <TableRow
+              <AgentsTableLoadingRow
                 key={`loading-${index}`}
-                className="border-b border-border last:border-b-0 hover:bg-transparent"
-              >
-                <TableCell colSpan={columnCount} className="px-0 py-0">
-                  <div className="grid grid-cols-5 gap-4 px-2.5 py-2.5">
-                    {Array.from({ length: columnCount }, (_, cellIndex) => (
-                      <div
-                        key={cellIndex}
-                        className={cn(
-                          "h-3.5 rounded-full bg-muted/80",
-                          cellIndex === 0
-                            ? "w-36"
-                            : cellIndex === 1
-                              ? "w-24"
-                              : "w-20"
-                        )}
-                      />
-                    ))}
-                  </div>
-                </TableCell>
-              </TableRow>
+                index={index}
+                columnCount={columnCount}
+              />
             ))
           ) : isError ? (
             <TableRow className="border-b border-border hover:bg-transparent">

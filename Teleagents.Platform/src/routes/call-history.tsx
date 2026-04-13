@@ -11,10 +11,6 @@ import { callLogsService } from "@/lib/services/call-logs.service"
 const PAGE_SIZE = 15
 
 export const Route = createFileRoute("/call-history")({
-  loader: ({ context }) =>
-    context.queryClient.ensureInfiniteQueryData(
-      callLogsService.listInfiniteQueryOptions({ pageSize: PAGE_SIZE })
-    ),
   component: CallHistoryPage,
 })
 
